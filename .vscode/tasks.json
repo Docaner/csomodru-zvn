@@ -1,0 +1,21 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "AMXPawn CompilePlugin",
+            "type": "process",
+            "command": "${workspaceRoot}\\bin\\amxxpc.exe",
+            "args": [
+                "${file}",
+                "-i${workspaceRoot}\\bind\\include",
+                "-o${workspaceRoot}\\compiled\\${fileBasenameNoExtension}.amxx"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}

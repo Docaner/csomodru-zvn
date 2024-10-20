@@ -1,0 +1,27 @@
+stock IsValidPlayer(iPlayer) return 0 < iPlayer < g_iMaxPlayers;
+stock PlaySound(iEnt, iSound, iReliable = false) {
+
+	if(iReliable) UTIL_SendAudio(0, _, g_szTitanSounds[iSound]);
+	else engfunc(EngFunc_EmitSound, iEnt, CHAN_AUTO, g_szTitanSounds[iSound], VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+
+}
+
+stock Float:GetSetting(iSetting) {
+
+	new Float:flValue; TrieGetCell(tSettings, g_szSettingKeys[iSetting], flValue);
+	return flValue;
+
+}
+
+stock IsPhaseChanged() {
+
+	static iOldPhase;
+	if(iOldPhase != g_iCurrentPhase) {
+	
+		iOldPhase = g_iCurrentPhase;
+		return true;
+	
+	}
+	return false;
+
+}
