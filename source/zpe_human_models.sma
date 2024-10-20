@@ -8,7 +8,7 @@
 native zp_get_user_hero(id)
 #endif
 
-new const g_szModelHero[] = "br_humans_1337_hw" // Модель героя;
+new const g_szModelHero[] = "br_humans_hw24" // Модель героя;
 #define BODY_HERO_PLAYER 18 // Боди героя
 #define BODY_HERO_HAT 41 // Боди героя с шапкой
 
@@ -16,7 +16,7 @@ new const g_szModelHero[] = "br_humans_1337_hw" // Модель героя;
 #define SKIN_DEF random(SKIN_DEF_MAX) // Установка стандартного скина
 
 
-new const g_szModelSurvivor[] = "br_humans_1337_hw" // Модель выжившего
+new const g_szModelSurvivor[] = "br_humans_hw24" // Модель выжившего
 #define BODY_SURVIVOR_PLAYER 20 // Боди выжившего
 
 //Женские Die-звуки
