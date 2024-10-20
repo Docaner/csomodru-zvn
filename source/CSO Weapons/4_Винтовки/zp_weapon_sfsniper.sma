@@ -93,7 +93,7 @@ const Float: EntityBeamWidth =				32.0;
 const Float: EntityBeamBrightness =			255.0; 
 const Float: EntityBeamDecrease =			5.0;
 const Float: EntityBeamLifeTime =			1.5;
-new const Float: EntityBeamColor[ ] =		{ 0.0, 100.0, 255.0 };
+new const Float: EntityBeamColor[ ] =		{ 250.0, 60.0, 35.0 };
 
 /* ~ [ Weapon Animations ] ~ */
 enum {

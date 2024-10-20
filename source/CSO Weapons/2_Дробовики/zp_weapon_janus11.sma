@@ -1,96 +1,80 @@
-/*
-	 _______ _    _          _   _       _______ ____   _____            ______ 
-	|__   __| |  | |   /\   | \ | |   /\|__   __/ __ \ / ____|          |____  |
-	   | |  | |__| |  /  \  |  \| |  /  \  | | | |  | | (___    ______      / / 
-	   | |  |  __  | / /\ \ | . ` | / /\ \ | | | |  | |\___ \  |______|    / /  
-	   | |  | |  | |/ ____ \| |\  |/ ____ \| | | |__| |____) |            / /   
-	   |_|  |_|  |_/_/    \_\_| \_/_/    \_\_|  \____/|_____/            /_/    
-
-	[1.0 - 2017]
-		- Первый релиз
-
-	[2.0 - 2018]
-		- Абсолютно новый код
-		- Исправлены недочёты
-*/
-
 #include <amxmodx>
 #include <fakemeta>
 #include <hamsandwich>
 #include <zombieplague>
-#include <zpe_knokcback>
-
 
 #define CustomItem(%0) (pev(%0, pev_impulse) == WEAPON_SPECIAL_CODE)
-#define Get_WeaponState(%0) (get_pdata_int(%0, m_iWeaponState, linux_diff_weapon) == STATE_IN_MODE)
-#define Set_WeaponState(%0,%1) set_pdata_int(%0, m_iWeaponState, %1, linux_diff_weapon)
+#define weaponHasMaxHits(%0) (get_pdata_int(%0, m_iHitCount, linux_diff_weapon) >= WEAPON_HIT_COUNT_SHOOT)
+#define weaponHasJanusMode(%0) (get_pdata_int(%0, m_iJanusMode, linux_diff_weapon))
 
 #define PDATA_SAFE 2
+#define m_iHitCount m_iGlock18ShotsFired
+#define m_iJanusMode m_iFamasShotsFired
 
-enum
+/*
+ * ' ' - A mode
+ * _B - B mode
+ * _R - Ready to B
+ */
+enum _: eAnimList
 {
-	WEAPON_ANIM_IDLE_A = 0,
+	WEAPON_ANIM_IDLE = 0,
+	WEAPON_ANIM_CHANGE_TO_B,
+	WEAPON_ANIM_SHOOT,
+	WEAPON_ANIM_INSERT,
+	WEAPON_ANIM_END,
+	WEAPON_ANIM_START,
+	WEAPON_ANIM_DRAW,
 	WEAPON_ANIM_IDLE_B,
-	WEAPON_ANIM_IDLE_B2,
-	WEAPON_ANIM_SHOOT_A,
 	WEAPON_ANIM_SHOOT_B,
-	WEAPON_ANIM_RELOAD_A = 7,
-	WEAPON_ANIM_RELOAD_B,
-	WEAPON_ANIM_SCYTHE_SHOOT,
-	WEAPON_ANIM_SCYTHE_START,
-	WEAPON_ANIM_DRAW_A,
-	WEAPON_ANIM_DRAW_B
-};
-
-enum
-{
-	STATE_NONE = 0,
-	STATE_IN_CHANGE,
-	STATE_IN_MODE
+	WEAPON_ANIM_DRAW_B,
+	WEAPON_ANIM_CHANGE_TO_A,
+	WEAPON_ANIM_IDLE_R,
+	WEAPON_ANIM_INSERT_R,
+	WEAPON_ANIM_END_R,
+	WEAPON_ANIM_START_R,
+	WEAPON_ANIM_SHOOT_R,
+	WEAPON_ANIM_DRAW_R
 };
 
 // From model: Frames/FPS
-#define WEAPON_ANIM_IDLE_TIME 91/30.0
-#define WEAPON_ANIM_SHOOT_TIME 16/30.0
-#define WEAPON_ANIM_RELOAD_TIME 96/30.0
-#define WEAPON_ANIM_DRAW_TIME 61/30.0
-#define WEAPON_ANIM_SCYTHE_START_TIME 91/30.0
-#define WEAPON_ANIM_SCYTHE_SHOOT_TIME 121/30.0
+#define WEAPON_ANIM_IDLE_TIME 51/30.0
+#define WEAPON_ANIM_SHOOT_TIME 31/30.0
+#define WEAPON_ANIM_INSERT_TIME 14/30.0
+#define WEAPON_ANIM_END_TIME 27/30.0
+#define WEAPON_ANIM_START_TIME 16/30.0
+#define WEAPON_ANIM_DRAW_TIME 41/30.0
+#define WEAPON_ANIM_CHANGE_TIME 51/30.0
 
-#define WEAPON_SPECIAL_CODE 1047
-#define WEAPON_REFERENCE "weapon_m249"
-#define WEAPON_NEW_NAME "zp_br_cso/weapons4/weapon_thanatos7"
+#define WEAPON_SPECIAL_CODE 207225
+#define WEAPON_REFERENCE "weapon_m3"
+#define WEAPON_NEW_NAME "x/weapon_janus11"
 
-#define WEAPON_ITEM_NAME "Thanatos-7"
+#define WEAPON_ITEM_NAME "JANUS-XI"
 #define WEAPON_ITEM_COST 0
 
-#define WEAPON_MODEL_VIEW "models/zp_br_cso/weapons4/v_thanatos7_fix.mdl"
+#define WEAPON_MODEL_VIEW "models/x/v_janus11.mdl"
+#define WEAPON_MODEL_PLAYER "models/x/p_janus11.mdl"
+#define WEAPON_MODEL_WORLD "models/x/w_janus11.mdl"
+#define WEAPON_BODY 0
 
-#define WEAPON_MODEL_WORLD "models/zp_br_cso/other/w_weapons4.mdl"
-#define WEAPON_BODY 2
+#define WEAPON_SOUND_SHOOT "weapons/janus11-1.wav"
+#define WEAPON_SOUND_SHOOT_B "weapons/janus11-4.wav"
 
-#define WEAPON_SOUND_SHOOT "weapons/thanatos7-1.wav"
-#define WEAPON_SOUND_SHOOT_B "weapons/thanatos7_scytheshoot.wav"
+#define WEAPON_MAX_CLIP 15
+#define WEAPON_DEFAULT_AMMO 32
+#define WEAPON_RATE WEAPON_ANIM_SHOOT_TIME - 0.3
+#define WEAPON_PUNCHANGLE 0.98
+#define WEAPON_DAMAGE 1.13
 
-#define WEAPON_MAX_CLIP 100
-#define WEAPON_DEFAULT_AMMO 200
-#define WEAPON_RATE 0.1
-#define WEAPON_PUNCHANGLE 0.948
-#define WEAPON_DAMAGE 1.42
+#define WEAPON_RATE_B 0.45
+#define WEAPON_PUNCHANGLE_B 0.78
+#define WEAPON_DAMAGE_B WEAPON_DAMAGE * 1.5
 
-#define ENTITY_SCYTHE_CLASSNAME "ent_th7_scythe"
-#define ENTITY_SCYTHE_MODEL "models/zp_br_cso/weapons4/thanatos7_scythe.mdl"
-#define ENTITY_SCYTHE_SPEED 1500.0
-#define ENTITY_SCYTHE_RADIUS 33.2
-#define ENTITY_SCYTHE_DAMAGE random_float(130.0, 220.0)
-#define ENTITY_SCYTHE_ALIVETIME 5.5
-#define ENTITY_SCYTHE_DMGTIME 0.1
-#define ENTITY_SCYTHE_DMGTYPE DMG_BURN
+#define WEAPON_HIT_COUNT_SHOOT 200 // Сколько нужно попасть для активации (1 попадание всеми пулями +9)
+#define WEAPON_JANUS_MODE_TIME 10.0 // Время режима
 
-new const iWeaponList[] =
-{
-	3, 200,-1, -1, 0, 4, 20, 0 // weapon_m249
-};
+new const iWeaponList[] = { 5, 32, -1, -1, 0, 5, 21, 0 };
 
 // Linux extra offsets
 #define linux_diff_weapon 4
@@ -113,11 +97,11 @@ new const iWeaponList[] =
 #define m_flTimeWeaponIdle 48
 #define m_iPrimaryAmmoType 49
 #define m_iClip 51
-#define m_fInReload 54
-#define m_iWeaponState 74
+#define m_fInSpecialReload 55
+#define m_iGlock18ShotsFired 70
+#define m_iFamasShotsFired 72
 
 // CBaseMonster
-#define m_LastHitGroup 75
 #define m_flNextAttack 83
 
 // CBasePlayer
@@ -126,10 +110,10 @@ new const iWeaponList[] =
 #define m_rgAmmo 376
 
 new g_iszAllocString_Entity,
-	g_iszAllocString_ModelView,
+	g_iszAllocString_ModelView, 
+	g_iszAllocString_ModelPlayer,
 
-	g_iszAllocString_InfoTarget,
-	g_iszAllocString_ScytheClass,
+	g_iszModelIndex_BeamEnt,
 
 	HamHook: g_HamHook_TraceAttack[4],
 
@@ -138,7 +122,7 @@ new g_iszAllocString_Entity,
 
 public plugin_init()
 {
-	register_plugin("[ZP] Weapon: THANATOS-7", "2.0", "xUnicorn (t3rkecorejz) / Batcoh: Code base");
+	register_plugin("[ZP] Weapon: JANUS-11", "1.0.1", "xUnicorn (t3rkecorejz) / Batcoh: Code base");
 
 	g_iItemID = zp_register_extra_item(WEAPON_ITEM_NAME, WEAPON_ITEM_COST, ZP_TEAM_HUMAN);
 
@@ -158,9 +142,6 @@ public plugin_init()
 	g_HamHook_TraceAttack[1] = RegisterHam(Ham_TraceAttack,		"info_target",		"CEntity__TraceAttack_Pre", false);
 	g_HamHook_TraceAttack[2] = RegisterHam(Ham_TraceAttack,		"player",			"CEntity__TraceAttack_Pre", false);
 	g_HamHook_TraceAttack[3] = RegisterHam(Ham_TraceAttack,		"hostage_entity",	"CEntity__TraceAttack_Pre", false);
-
-	RegisterHam(Ham_Think,					"info_target",		"CScythe__Think_Pre", false);
-	RegisterHam(Ham_Touch,					"info_target",		"CScythe__Touch_Pre", false);
 	
 	fm_ham_hook(false);
 
@@ -174,7 +155,8 @@ public plugin_precache()
 
 	// Precache models
 	engfunc(EngFunc_PrecacheModel, WEAPON_MODEL_VIEW);
-	engfunc(EngFunc_PrecacheModel, ENTITY_SCYTHE_MODEL);
+	engfunc(EngFunc_PrecacheModel, WEAPON_MODEL_PLAYER);
+	engfunc(EngFunc_PrecacheModel, WEAPON_MODEL_WORLD);
 
 	// Precache generic
 	UTIL_PrecacheSpritesFromTxt(WEAPON_NEW_NAME);
@@ -183,12 +165,15 @@ public plugin_precache()
 	engfunc(EngFunc_PrecacheSound, WEAPON_SOUND_SHOOT);
 	engfunc(EngFunc_PrecacheSound, WEAPON_SOUND_SHOOT_B);
 
+	UTIL_PrecacheSoundsFromModel(WEAPON_MODEL_VIEW);
+
 	// Other
 	g_iszAllocString_Entity = engfunc(EngFunc_AllocString, WEAPON_REFERENCE);
 	g_iszAllocString_ModelView = engfunc(EngFunc_AllocString, WEAPON_MODEL_VIEW);
+	g_iszAllocString_ModelPlayer = engfunc(EngFunc_AllocString, WEAPON_MODEL_PLAYER);
 
-	g_iszAllocString_InfoTarget = engfunc(EngFunc_AllocString, "info_target");
-	g_iszAllocString_ScytheClass = engfunc(EngFunc_AllocString, ENTITY_SCYTHE_CLASSNAME);
+	// Model Index
+	g_iszModelIndex_BeamEnt = engfunc(EngFunc_PrecacheModel, "sprites/laserbeam.spr");
 }
 
 // [ Amxx ]
@@ -221,8 +206,6 @@ public Command_GiveWeapon(iPlayer)
 
 	ExecuteHamB(Ham_Item_AttachToPlayer, iEntity, iPlayer);
 	set_pdata_int(iEntity, m_iClip, WEAPON_MAX_CLIP, linux_diff_weapon);
-
-	Set_WeaponState(iEntity, 0);
 
 	new iAmmoType = m_rgAmmo + get_pdata_int(iEntity, m_iPrimaryAmmoType, linux_diff_weapon);
 	if(get_pdata_int(iPlayer, m_rgAmmo, linux_diff_player) < WEAPON_DEFAULT_AMMO)
@@ -268,12 +251,40 @@ public FM_Hook_SetModel_Pre(iEntity)
 
 public FM_Hook_PlaybackEvent_Pre() return FMRES_SUPERCEDE;
 
-public FM_Hook_TraceLine_Post(const Float:flOrigin1[3], const Float:flOrigin2[3], iFrag, iAttacker, iTrace)
+public FM_Hook_TraceLine_Post(const Float: flOrigin1[3], const Float: flOrigin2[3], iFrag, iAttacker, iTrace)
 {
 	if(iFrag & IGNORE_MONSTERS) return FMRES_IGNORED;
 
 	static pHit; pHit = get_tr2(iTrace, TR_pHit);
-	static Float:flvecEndPos[3]; get_tr2(iTrace, TR_vecEndPos, flvecEndPos);
+	static Float: flvecEndPos[3]; get_tr2(iTrace, TR_vecEndPos, flvecEndPos);
+
+	static iItem; iItem = get_pdata_cbase(iAttacker, m_pActiveItem, linux_diff_player);
+	if(iItem || CustomItem(iItem))
+	{
+		if(weaponHasJanusMode(iItem))
+		{
+			message_begin(MSG_BROADCAST, SVC_TEMPENTITY)
+			write_byte(TE_BEAMPOINTS)
+			engfunc(EngFunc_WriteCoord, flOrigin1[0]);
+			engfunc(EngFunc_WriteCoord, flOrigin1[1]);
+			engfunc(EngFunc_WriteCoord, flOrigin1[2]);
+			engfunc(EngFunc_WriteCoord, flvecEndPos[0]);
+			engfunc(EngFunc_WriteCoord, flvecEndPos[1]);
+			engfunc(EngFunc_WriteCoord, flvecEndPos[2]);
+			write_short(g_iszModelIndex_BeamEnt);
+			write_byte(0); // start frame
+			write_byte(0); // framerate
+			write_byte(5); // life
+			write_byte(5); // line width
+			write_byte(0); // amplitude
+			write_byte(220);
+			write_byte(88);
+			write_byte(0); // blue
+			write_byte(255); // brightness
+			write_byte(0); // speed
+			message_end();
+		}
+	}
 
 	if(pHit > 0) if(pev(pHit, pev_solid) != SOLID_BSP) return FMRES_IGNORED;
 
@@ -294,13 +305,8 @@ public CWeapon__Holster_Post(iItem)
 {
 	if(!CustomItem(iItem)) return;
 	static iPlayer; iPlayer = get_pdata_cbase(iItem, m_pPlayer, linux_diff_weapon);
-
-	switch(get_pdata_int(iItem, m_iWeaponState, linux_diff_weapon))
-	{
-		case STATE_NONE, STATE_IN_CHANGE: set_pdata_int(iItem, m_iWeaponState, STATE_NONE, linux_diff_weapon);
-		case STATE_IN_MODE: set_pdata_int(iItem, m_iWeaponState, STATE_IN_MODE, linux_diff_weapon);
-	}
 	
+	set_pdata_int(iItem, m_fInSpecialReload, 0, linux_diff_weapon);
 	set_pdata_float(iItem, m_flNextPrimaryAttack, 0.0, linux_diff_weapon);
 	set_pdata_float(iItem, m_flNextSecondaryAttack, 0.0, linux_diff_weapon);
 	set_pdata_float(iItem, m_flTimeWeaponIdle, 0.0, linux_diff_weapon);
@@ -314,9 +320,11 @@ public CWeapon__Deploy_Post(iItem)
 	static iPlayer; iPlayer = get_pdata_cbase(iItem, m_pPlayer, linux_diff_weapon);
 
 	set_pev_string(iPlayer, pev_viewmodel2, g_iszAllocString_ModelView);
+	set_pev_string(iPlayer, pev_weaponmodel2, g_iszAllocString_ModelPlayer);
 
-	UTIL_SendWeaponAnim(iPlayer, Get_WeaponState(iItem) ? WEAPON_ANIM_DRAW_B : WEAPON_ANIM_DRAW_A);
+	UTIL_SendWeaponAnim(iPlayer, weaponHasJanusMode(iItem) ? WEAPON_ANIM_DRAW_B : weaponHasMaxHits(iItem) ? WEAPON_ANIM_DRAW_R : WEAPON_ANIM_DRAW);
 
+	set_pdata_int(iItem, m_fInSpecialReload, 0, linux_diff_weapon);
 	set_pdata_float(iPlayer, m_flNextAttack, WEAPON_ANIM_DRAW_TIME, linux_diff_player);
 	set_pdata_float(iItem, m_flTimeWeaponIdle, WEAPON_ANIM_DRAW_TIME, linux_diff_weapon);
 }
@@ -326,29 +334,47 @@ public CWeapon__PostFrame_Pre(iItem)
 	if(!CustomItem(iItem)) return HAM_IGNORED;
 
 	static iPlayer; iPlayer = get_pdata_cbase(iItem, m_pPlayer, linux_diff_weapon);
+	static iClip; iClip = get_pdata_int(iItem, m_iClip, linux_diff_weapon);
+	static iAmmoType; iAmmoType = m_rgAmmo + get_pdata_int(iItem, m_iPrimaryAmmoType, linux_diff_weapon);
+	static iAmmo; iAmmo = get_pdata_int(iPlayer, iAmmoType, linux_diff_player);
 	static iButton; iButton = pev(iPlayer, pev_button);
+	static Float: flGameTime; flGameTime = get_gametime();
+	static Float: flJanusTime; pev(iItem, pev_fuser4, flJanusTime);
 
-	// reload
-	if(get_pdata_int(iItem, m_fInReload, linux_diff_weapon) == 1)
+	if(weaponHasJanusMode(iItem) && flJanusTime < flGameTime)
 	{
-		static iClip; iClip = get_pdata_int(iItem, m_iClip, linux_diff_weapon);
-		static iAmmoType; iAmmoType = m_rgAmmo + get_pdata_int(iItem, m_iPrimaryAmmoType, linux_diff_weapon);
-		static iAmmo; iAmmo = get_pdata_int(iPlayer, iAmmoType, linux_diff_player);
-		static j; j = min(WEAPON_MAX_CLIP - iClip, iAmmo);
+		set_pdata_int(iItem, m_iJanusMode, 0, linux_diff_weapon);
 
-		set_pdata_int(iItem, m_iClip, iClip + j, linux_diff_weapon);
-		set_pdata_int(iPlayer, iAmmoType, iAmmo - j, linux_diff_player);
-		set_pdata_int(iItem, m_fInReload, 0, linux_diff_weapon);
+		UTIL_SendWeaponAnim(iPlayer, WEAPON_ANIM_CHANGE_TO_A);
+
+		set_pdata_float(iItem, m_flNextPrimaryAttack, WEAPON_ANIM_CHANGE_TIME, linux_diff_weapon);
+		set_pdata_float(iItem, m_flNextSecondaryAttack, WEAPON_ANIM_CHANGE_TIME, linux_diff_weapon);
+		set_pdata_float(iItem, m_flTimeWeaponIdle, WEAPON_ANIM_CHANGE_TIME, linux_diff_weapon);
 	}
 
-	// change mode
-	if(get_pdata_int(iItem, m_iWeaponState, linux_diff_weapon) == STATE_IN_CHANGE)
+	if(get_pdata_int(iItem, m_fInSpecialReload, linux_diff_weapon) == 1)
 	{
-		set_pdata_int(iItem, m_iWeaponState, STATE_IN_MODE, linux_diff_weapon);
-		set_pdata_float(iPlayer, m_flNextAttack, 0.01, linux_diff_player);
+		if(get_pdata_float(iItem, m_flNextSecondaryAttack, linux_diff_weapon) > 0.0) return HAM_IGNORED;
+
+		if(iAmmo <= 0 || iClip == WEAPON_MAX_CLIP)
+		{
+			set_pdata_int(iItem, m_fInSpecialReload, 0, linux_diff_weapon);
+			set_pdata_float(iItem, m_flNextSecondaryAttack, WEAPON_ANIM_END_TIME, linux_diff_weapon);
+			set_pdata_float(iItem, m_flTimeWeaponIdle, WEAPON_ANIM_END_TIME, linux_diff_weapon);
+
+			UTIL_SendWeaponAnim(iPlayer, weaponHasMaxHits(iItem) ? WEAPON_ANIM_END_R : WEAPON_ANIM_END);
+		}
+		else
+		{
+			set_pdata_int(iItem, m_iClip, iClip + 1, linux_diff_weapon);
+			set_pdata_int(iPlayer, iAmmoType, iAmmo - 1, linux_diff_player);
+			set_pdata_float(iItem, m_flNextSecondaryAttack, WEAPON_ANIM_INSERT_TIME, linux_diff_weapon);
+			set_pdata_float(iItem, m_flTimeWeaponIdle, WEAPON_ANIM_INSERT_TIME, linux_diff_weapon);
+
+			UTIL_SendWeaponAnim(iPlayer, weaponHasMaxHits(iItem) ? WEAPON_ANIM_INSERT_R : WEAPON_ANIM_INSERT);
+		}
 	}
 
-	// secondary attack
 	if(iButton & IN_ATTACK2 && get_pdata_float(iItem, m_flNextSecondaryAttack, linux_diff_weapon) < 0.0)
 	{
 		ExecuteHamB(Ham_Weapon_SecondaryAttack, iItem);
@@ -372,6 +398,8 @@ public CWeapon__AddToPlayer_Post(iItem, iPlayer)
 public CWeapon__Reload_Pre(iItem)
 {
 	if(!CustomItem(iItem)) return HAM_IGNORED;
+	if(get_pdata_int(iItem, m_fInSpecialReload, linux_diff_weapon) != 0) return HAM_SUPERCEDE;
+	if(weaponHasJanusMode(iItem)) return HAM_SUPERCEDE;
 
 	static iClip; iClip = get_pdata_int(iItem, m_iClip, linux_diff_weapon);
 	if(iClip >= WEAPON_MAX_CLIP) return HAM_SUPERCEDE;
@@ -383,14 +411,14 @@ public CWeapon__Reload_Pre(iItem)
 	set_pdata_int(iItem, m_iClip, 0, linux_diff_weapon);
 	ExecuteHam(Ham_Weapon_Reload, iItem);
 	set_pdata_int(iItem, m_iClip, iClip, linux_diff_weapon);
-	set_pdata_int(iItem, m_fInReload, 1, linux_diff_weapon);
+	set_pdata_int(iItem, m_fInSpecialReload, 1, linux_diff_weapon);
 
-	UTIL_SendWeaponAnim(iPlayer, Get_WeaponState(iItem) ? WEAPON_ANIM_RELOAD_B : WEAPON_ANIM_RELOAD_A);
+	UTIL_SendWeaponAnim(iPlayer, weaponHasMaxHits(iItem) ? WEAPON_ANIM_START_R : WEAPON_ANIM_START);
 
-	// set_pdata_float(iItem, m_flNextPrimaryAttack, WEAPON_ANIM_RELOAD_TIME, linux_diff_weapon);
-	// set_pdata_float(iItem, m_flNextSecondaryAttack, WEAPON_ANIM_RELOAD_TIME, linux_diff_weapon);
-	set_pdata_float(iItem, m_flTimeWeaponIdle, WEAPON_ANIM_RELOAD_TIME, linux_diff_weapon);
-	set_pdata_float(iPlayer, m_flNextAttack, WEAPON_ANIM_RELOAD_TIME, linux_diff_player);
+	set_pdata_float(iItem, m_flNextPrimaryAttack, WEAPON_ANIM_START_TIME, linux_diff_weapon);
+	set_pdata_float(iItem, m_flNextSecondaryAttack, WEAPON_ANIM_START_TIME, linux_diff_weapon);
+	set_pdata_float(iItem, m_flTimeWeaponIdle, WEAPON_ANIM_START_TIME, linux_diff_weapon);
+	set_pdata_float(iPlayer, m_flNextAttack, WEAPON_ANIM_START_TIME, linux_diff_player);
 
 	return HAM_SUPERCEDE;
 }
@@ -400,7 +428,7 @@ public CWeapon__WeaponIdle_Pre(iItem)
 	if(!CustomItem(iItem) || get_pdata_float(iItem, m_flTimeWeaponIdle, linux_diff_weapon) > 0.0) return HAM_IGNORED;
 	static iPlayer; iPlayer = get_pdata_cbase(iItem, m_pPlayer, linux_diff_weapon);
 
-	UTIL_SendWeaponAnim(iPlayer, Get_WeaponState(iItem) ? random_num(WEAPON_ANIM_IDLE_B2, WEAPON_ANIM_IDLE_B2) : WEAPON_ANIM_IDLE_A);
+	UTIL_SendWeaponAnim(iPlayer, weaponHasJanusMode(iItem) ? WEAPON_ANIM_IDLE_B : weaponHasMaxHits(iItem) ? WEAPON_ANIM_IDLE_R : WEAPON_ANIM_IDLE);
 	set_pdata_float(iItem, m_flTimeWeaponIdle, WEAPON_ANIM_IDLE_TIME, linux_diff_weapon);
 
 	return HAM_SUPERCEDE;
@@ -410,12 +438,17 @@ public CWeapon__PrimaryAttack_Pre(iItem)
 {
 	if(!CustomItem(iItem)) return HAM_IGNORED;
 
-	if(get_pdata_int(iItem, m_iClip, linux_diff_weapon) == 0)
-	{
-		ExecuteHam(Ham_Weapon_PlayEmptySound, iItem);
-		set_pdata_float(iItem, m_flNextPrimaryAttack, 0.2, linux_diff_weapon);
+	static iClip; iClip = get_pdata_int(iItem, m_iClip, linux_diff_weapon);
 
-		return HAM_SUPERCEDE;
+	if(!weaponHasJanusMode(iItem))
+	{
+		if(iClip == 0)
+		{
+			ExecuteHam(Ham_Weapon_PlayEmptySound, iItem);
+			set_pdata_float(iItem, m_flNextPrimaryAttack, 0.2, linux_diff_weapon);
+
+			return HAM_SUPERCEDE;
+		}
 	}
 
 	static iPlayer; iPlayer = get_pdata_cbase(iItem, m_pPlayer, linux_diff_weapon);
@@ -424,6 +457,7 @@ public CWeapon__PrimaryAttack_Pre(iItem)
 	static fw_PlayBackEvent; fw_PlayBackEvent = register_forward(FM_PlaybackEvent, "FM_Hook_PlaybackEvent_Pre", false);
 	fm_ham_hook(true);
 
+	if(weaponHasJanusMode(iItem)) set_pdata_int(iItem, m_iClip, iClip + 1, linux_diff_weapon);
 	ExecuteHam(Ham_Weapon_PrimaryAttack, iItem);
 
 	unregister_forward(FM_TraceLine, fw_TraceLine, true);
@@ -432,16 +466,28 @@ public CWeapon__PrimaryAttack_Pre(iItem)
 
 	static Float:vecPunchangle[3];
 	pev(iPlayer, pev_punchangle, vecPunchangle);
-	vecPunchangle[0] *= WEAPON_PUNCHANGLE;
-	vecPunchangle[1] *= WEAPON_PUNCHANGLE;
-	vecPunchangle[2] *= WEAPON_PUNCHANGLE;
+	vecPunchangle[0] *= weaponHasJanusMode(iItem) ? WEAPON_PUNCHANGLE_B : WEAPON_PUNCHANGLE;
+	vecPunchangle[1] *= weaponHasJanusMode(iItem) ? WEAPON_PUNCHANGLE_B : WEAPON_PUNCHANGLE;
+	vecPunchangle[2] *= weaponHasJanusMode(iItem) ? WEAPON_PUNCHANGLE_B : WEAPON_PUNCHANGLE;
 	set_pev(iPlayer, pev_punchangle, vecPunchangle);
 
-	UTIL_SendWeaponAnim(iPlayer, Get_WeaponState(iItem) ? WEAPON_ANIM_SHOOT_B : WEAPON_ANIM_SHOOT_A);
-	emit_sound(iPlayer, CHAN_WEAPON, WEAPON_SOUND_SHOOT, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+	set_pdata_int(iItem, m_fInSpecialReload, 0, linux_diff_weapon);
 
-	set_pdata_float(iItem, m_flNextPrimaryAttack, WEAPON_RATE, linux_diff_weapon);
-	set_pdata_float(iItem, m_flNextSecondaryAttack, WEAPON_RATE, linux_diff_weapon);
+	if(weaponHasJanusMode(iItem))
+	{
+		UTIL_SendWeaponAnim(iPlayer, WEAPON_ANIM_SHOOT_B);
+		emit_sound(iPlayer, CHAN_WEAPON, WEAPON_SOUND_SHOOT_B, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+
+		set_pdata_int(iItem, m_iClip, iClip, linux_diff_weapon);
+	}
+	else
+	{
+		UTIL_SendWeaponAnim(iPlayer, weaponHasMaxHits(iItem) ? WEAPON_ANIM_SHOOT_R : WEAPON_ANIM_SHOOT);
+		emit_sound(iPlayer, CHAN_WEAPON, WEAPON_SOUND_SHOOT, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+	}
+
+	set_pdata_float(iItem, m_flNextPrimaryAttack, weaponHasJanusMode(iItem) ? WEAPON_RATE_B : WEAPON_RATE, linux_diff_weapon);
+	set_pdata_float(iItem, m_flNextSecondaryAttack, weaponHasJanusMode(iItem) ? WEAPON_RATE_B : WEAPON_RATE, linux_diff_weapon);
 	set_pdata_float(iItem, m_flTimeWeaponIdle, WEAPON_ANIM_SHOOT_TIME, linux_diff_weapon);
 
 	return HAM_SUPERCEDE;
@@ -450,45 +496,22 @@ public CWeapon__PrimaryAttack_Pre(iItem)
 public CWeapon__SecondaryAttack_Pre(iItem)
 {
 	if(!CustomItem(iItem)) return HAM_IGNORED;
-
-	if(get_pdata_int(iItem, m_iClip, linux_diff_weapon) == 0)
-	{
-		ExecuteHam(Ham_Weapon_PlayEmptySound, iItem);
-		set_pdata_float(iItem, m_flNextSecondaryAttack, 0.2, linux_diff_weapon);
-
-		return HAM_SUPERCEDE;
-	}
+	if(!weaponHasMaxHits(iItem)) return HAM_IGNORED;
 
 	static iPlayer; iPlayer = get_pdata_cbase(iItem, m_pPlayer, linux_diff_weapon);
+	static Float: flGameTime; flGameTime = get_gametime();
 
-	new Float: flTime;
-	switch(get_pdata_int(iItem, m_iWeaponState, linux_diff_weapon))
-	{
-		case STATE_NONE:
-		{
-			Set_WeaponState(iItem, STATE_IN_CHANGE);
+	set_pdata_int(iItem, m_iHitCount, 0, linux_diff_weapon);
+	set_pdata_int(iItem, m_iJanusMode, 1, linux_diff_weapon);
+	set_pev(iItem, pev_fuser4, flGameTime + WEAPON_JANUS_MODE_TIME);
 
-			flTime = WEAPON_ANIM_SCYTHE_START_TIME;
-			UTIL_SendWeaponAnim(iPlayer, WEAPON_ANIM_SCYTHE_START);
-		}
-		case STATE_IN_MODE:
-		{
-			Set_WeaponState(iItem, STATE_NONE);
+	UTIL_SendWeaponAnim(iPlayer, WEAPON_ANIM_CHANGE_TO_B);
 
-			flTime = WEAPON_ANIM_SCYTHE_SHOOT_TIME;
-			UTIL_SendWeaponAnim(iPlayer, WEAPON_ANIM_SCYTHE_SHOOT);
-			emit_sound(iPlayer, CHAN_WEAPON, WEAPON_SOUND_SHOOT_B, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+	set_pdata_float(iItem, m_flNextPrimaryAttack, WEAPON_ANIM_CHANGE_TIME, linux_diff_weapon);
+	set_pdata_float(iItem, m_flNextSecondaryAttack, WEAPON_ANIM_CHANGE_TIME, linux_diff_weapon);
+	set_pdata_float(iItem, m_flTimeWeaponIdle, WEAPON_ANIM_CHANGE_TIME, linux_diff_weapon);
 
-			Create_Scythe(iPlayer);
-		}
-	}
-
-	set_pdata_float(iItem, m_flNextPrimaryAttack, flTime, linux_diff_weapon);
-	set_pdata_float(iItem, m_flNextSecondaryAttack, flTime, linux_diff_weapon);
-	set_pdata_float(iItem, m_flTimeWeaponIdle, flTime, linux_diff_weapon);
-	set_pdata_float(iPlayer, m_flNextAttack, flTime, linux_diff_player);
-
-	return HAM_SUPERCEDE;
+	return HAM_IGNORED;
 }
 
 public CEntity__TraceAttack_Pre(iVictim, iAttacker, Float:flDamage)
@@ -498,120 +521,13 @@ public CEntity__TraceAttack_Pre(iVictim, iAttacker, Float:flDamage)
 	static iItem; iItem = get_pdata_cbase(iAttacker, m_pActiveItem, linux_diff_player);
 	if(iItem <= 0 || !CustomItem(iItem)) return;
 
-	SetHamParamFloat(3, flDamage * WEAPON_DAMAGE);
-}
+	if(is_user_alive(iVictim) && zp_get_user_zombie(iVictim) && !weaponHasMaxHits(iItem) && !weaponHasJanusMode(iItem))
+		set_pdata_int(iItem, m_iHitCount, get_pdata_int(iItem, m_iHitCount, linux_diff_weapon) + 1, linux_diff_weapon);
 
-public CScythe__Think_Pre(iEntity)
-{
-	if(pev_valid(iEntity) != PDATA_SAFE) return HAM_IGNORED;
-	if(pev(iEntity, pev_classname) == g_iszAllocString_ScytheClass)
-	{
-		set_pev(iEntity, pev_flags, FL_KILLME);
-	}
-
-	return HAM_IGNORED;
-}
-
-public CScythe__Touch_Pre(iEntity, iVictim)
-{
-	if(pev_valid(iEntity) != PDATA_SAFE || pev(iVictim, pev_solid) == SOLID_TRIGGER) return HAM_IGNORED;
-
-	if(pev(iEntity, pev_classname) == g_iszAllocString_ScytheClass)
-	{
-		/* По тимейтам не ебашит */
-		if(is_user_connected(iVictim) && !zp_get_user_zombie(iVictim))
-			return HAM_SUPERCEDE;
-
-		new iOwner = pev(iEntity, pev_owner);
-		new Float: vecOrigin[3]; pev(iEntity, pev_origin, vecOrigin);
-
-		if(engfunc(EngFunc_PointContents, vecOrigin) == CONTENTS_SKY)
-		{
-			set_pev(iEntity, pev_flags, FL_KILLME);
-			return HAM_IGNORED;
-		}
-
-		if(iVictim == iOwner) return HAM_SUPERCEDE;
-
-		static Float: flGameTime; flGameTime = get_gametime();
-		static Float: flDmgTime; //pev(iVictim, pev_dmgtime, flDmgTime);
-
-		set_pev(iEntity, pev_velocity, Float: { 0.0, 0.0, 0.0 });
-		set_pev(iEntity, pev_movetype, MOVETYPE_NONE);
-
-		iVictim = FM_NULLENT;
-		while((iVictim = engfunc(EngFunc_FindEntityInSphere, iVictim, vecOrigin, ENTITY_SCYTHE_RADIUS)) > 0)
-		{
-			if(pev_valid(iVictim) != PDATA_SAFE) continue;
-			if(pev(iVictim, pev_takedamage) == DAMAGE_NO) continue;
-			if(is_user_alive(iVictim))
-			{
-				if(iVictim == iOwner || !zp_get_user_zombie(iVictim))
-					continue;
-			}
-			else if(pev(iVictim, pev_solid) == SOLID_BSP)
-			{
-				if(pev(iVictim, pev_spawnflags) & SF_BREAK_TRIGGER_ONLY)
-					continue;
-			}
-			pev(iVictim, pev_dmgtime, flDmgTime);
-			if(flDmgTime <= flGameTime)
-			{
-				set_pev(iVictim, pev_dmgtime, flGameTime + 0.3);
-
-				set_pdata_int(iVictim, m_LastHitGroup, HIT_GENERIC, linux_diff_player);
-				ExecuteHamB(Ham_TakeDamage, iVictim, iOwner, iOwner, ENTITY_SCYTHE_DAMAGE, ENTITY_SCYTHE_DMGTYPE);
-				zp_set_user_velocitymifier(iVictim, 0.32)
-			}
-			
-		}	
-	}
-
-	return HAM_IGNORED;
+	SetHamParamFloat(3, flDamage * (weaponHasJanusMode(iItem) ? WEAPON_DAMAGE_B : WEAPON_DAMAGE));
 }
 
 // [ Other ]
-public Create_Scythe(iPlayer)
-{
-	new iEntity = engfunc(EngFunc_CreateNamedEntity, g_iszAllocString_InfoTarget);
-	if(!pev_valid(iEntity)) return 0;
-
-	new Float: vecOrigin[3]; pev(iPlayer, pev_origin, vecOrigin);
-	new Float: vecAngles[3]; pev(iPlayer, pev_v_angle, vecAngles);
-	new Float: vecVelocity[3]; angle_vector(vecAngles, ANGLEVECTOR_FORWARD, vecVelocity);
-	new Float: vecViewOfs[3]; pev(iPlayer, pev_view_ofs, vecViewOfs);
-
-	vecOrigin[0] += vecViewOfs[0] + vecVelocity[0] * 20.0;
-	vecOrigin[1] += vecViewOfs[1] + vecVelocity[1] * 20.0;
-	vecOrigin[2] += vecViewOfs[2] + vecVelocity[2] * 20.0;
-
-	vecVelocity[0] *= ENTITY_SCYTHE_SPEED;
-	vecVelocity[1] *= ENTITY_SCYTHE_SPEED;
-	vecVelocity[2] *= ENTITY_SCYTHE_SPEED;
-
-	new Float: flGameTime = get_gametime();
-
-	set_pev_string(iEntity, pev_classname, g_iszAllocString_ScytheClass);
-	set_pev(iEntity, pev_solid, SOLID_TRIGGER);
-	set_pev(iEntity, pev_movetype, MOVETYPE_FLY);
-	set_pev(iEntity, pev_owner, iPlayer);
-	set_pev(iEntity, pev_velocity, vecVelocity);
-	set_pev(iEntity, pev_nextthink, flGameTime + ENTITY_SCYTHE_ALIVETIME);
-
-	engfunc(EngFunc_VecToAngles, vecVelocity, vecAngles);
-	set_pev(iEntity, pev_angles, vecAngles);
-
-	set_pev(iEntity, pev_animtime, flGameTime);
-	set_pev(iEntity, pev_framerate, 1.0);
-	set_pev(iEntity, pev_frame, 1.0);
-
-	engfunc(EngFunc_SetModel, iEntity, ENTITY_SCYTHE_MODEL);
-	engfunc(EngFunc_SetSize, iEntity, Float: { -1.0, -1.0, -1.0 }, Float: { 1.0, 1.0, 1.0 });
-	engfunc(EngFunc_SetOrigin, iEntity, vecOrigin);
-
-	return iEntity;
-}
-
 public fm_ham_hook(bool: bEnabled)
 {
 	if(bEnabled)
@@ -631,28 +547,6 @@ public fm_ham_hook(bool: bEnabled)
 }
 
 // [ Stocks ]
-/*stock is_wall_between_points(iPlayer, iEntity)
-{
-	// vector
-	#define Vector_Equal(%0,%1) ((%1[0] == %0[0]) && (%1[1] == %0[1]) && (%1[2] == %0[2]))
-
-	if(!is_user_alive(iEntity))
-		return 0;
-
-	new iTrace = create_tr2();
-	new Float: flStart[3], Float: flEnd[3], Float: flEndPos[3];
-
-	pev(iPlayer, pev_origin, flStart);
-	pev(iEntity, pev_origin, flEnd);
-
-	engfunc(EngFunc_TraceLine, flStart, flEnd, IGNORE_MONSTERS, iPlayer, iTrace);
-	get_tr2(iTrace, TR_vecEndPos, flEndPos);
-
-	free_tr2(iTrace);
-
-	return Vector_Equal(flEnd, flEndPos);
-}*/
-
 stock UTIL_SendWeaponAnim(iPlayer, iAnim)
 {
 	set_pev(iPlayer, pev_weaponanim, iAnim);
