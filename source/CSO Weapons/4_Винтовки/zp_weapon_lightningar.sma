@@ -39,10 +39,6 @@ new const PluginAuthor[ ] =						"Yoshioka Haruki";
  */
 #tryinclude <api_weapon_player_model>
 
-#if !defined _reapi_included
-	#include <non_reapi_support>
-#endif
-
 /**
  * Automatically precache sounds from the model
  * 
