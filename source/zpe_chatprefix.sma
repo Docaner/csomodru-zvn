@@ -119,7 +119,7 @@ public Hook__ClCmd_Say(id, bool:bTeam)
 		formatex(szPriv, charsmax(szPriv), "NiGa")
 	//MeatGreender
 	else if(equal(szSteamID, "STEAM_0:0:177908902"))
-		formatex(szPriv, charsmax(szPriv), "Инженер-картодел")
+		formatex(szPriv, charsmax(szPriv), "Cirno")
 	//Destroer
 	else if(equal(szSteamID, "STEAM_1:0:988578733"))
 		formatex(szPriv, charsmax(szPriv), "BuRnInG")
