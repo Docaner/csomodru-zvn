@@ -31,7 +31,7 @@ new const ENTITY_ROCKET_CLASSNAME[ ] =	"ent_rpg7_rocket";
 new const ENTITY_ROCKET_MODEL[ ] = 		"models/x/s_rpg7.mdl";
 new const ENTITY_ROCKET_SOUND[ ] = 		"weapons/explode3.wav";
 const Float: ENTITY_ROCKET_SPEED = 		1500.0;
-const Float: ENTITY_ROCKET_DAMAGE = 	1000.0;
+const Float: ENTITY_ROCKET_DAMAGE = 	1200.0;
 const Float: ENTITY_ROCKET_RADIUS = 	200.0;
 const ENTITY_ROCKET_DMGTYPE = 			( DMG_CLUB );
 
