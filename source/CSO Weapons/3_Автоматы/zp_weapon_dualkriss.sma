@@ -28,6 +28,7 @@ const EXTRA_ITEM_COST = 					0;
  **/
 #define EJECT_BRASS
 #define CUSTOM_WEAPONLIST
+#define WEAPON_KEY	1046228
 
 new const WEAPON_REFERENCE[ ] = 			"weapon_mac10";
 #if defined CUSTOM_WEAPONLIST
@@ -50,6 +51,7 @@ new const WEAPON_SOUNDS[ ][ ] =
 };
 
 const WEAPON_MODEL_WORLD_BODY = 			0;
+
 
 const WEAPON_MAX_CLIP = 					50;
 const WEAPON_DEFAULT_AMMO = 				100;
@@ -84,7 +86,7 @@ enum _: eWeaponAnimList {
 
 /* ~ [ Params ] ~ */
 new gl_iItemId;
-new gl_iAllocString_WeaponUId;
+
 #if defined EJECT_BRASS
 	new gl_iszModelIndex_Shell;
 #endif
@@ -131,11 +133,11 @@ public plugin_precache( )
 	#endif
 
 	/* -> Alloc String -> */
-	#if defined CUSTOM_WEAPONLIST
-		gl_iAllocString_WeaponUId = engfunc( EngFunc_AllocString, WEAPON_WEAPONLIST );
-	#else
-		gl_iAllocString_WeaponUId = engfunc( EngFunc_AllocString, WEAPON_NATIVE );
-	#endif
+	// #if defined CUSTOM_WEAPONLIST
+	// 	WEAPON_KEY = engfunc( EngFunc_AllocString, WEAPON_WEAPONLIST );
+	// #else
+	// 	WEAPON_KEY = engfunc( EngFunc_AllocString, WEAPON_NATIVE );
+	// #endif
 }
 
 public plugin_init( ) 
@@ -175,7 +177,7 @@ public bool: Native_GiveWeapon( )
 	if ( !is_user_alive( pPlayer ) )
 		return false;
 	
-	return UTIL_GiveCustomWeapon( pPlayer, WEAPON_REFERENCE, gl_iAllocString_WeaponUId, WEAPON_DEFAULT_AMMO );
+	return UTIL_GiveCustomWeapon( pPlayer, WEAPON_REFERENCE, WEAPON_KEY, WEAPON_DEFAULT_AMMO );
 }
 
 #if defined CUSTOM_WEAPONLIST
@@ -192,7 +194,7 @@ public zp_extra_item_selected( pPlayer, iItemId )
 	if ( iItemId != gl_iItemId ) 
 		return PLUGIN_HANDLED;
 
-	return UTIL_GiveCustomWeapon( pPlayer, WEAPON_REFERENCE, gl_iAllocString_WeaponUId, WEAPON_DEFAULT_AMMO );
+	return UTIL_GiveCustomWeapon( pPlayer, WEAPON_REFERENCE, WEAPON_KEY, WEAPON_DEFAULT_AMMO );
 }
 
 /* ~ [ Fakemeta ] ~ */
@@ -202,7 +204,7 @@ public FM_Hook_UpdateClientData_Post( const pPlayer, const iSendWeapons, const C
 		return;
 
 	static pActiveItem; pActiveItem = get_member( pPlayer, m_pActiveItem );
-	if ( is_nullent( pActiveItem ) || !IsCustomWeapon( pActiveItem, gl_iAllocString_WeaponUId ) )
+	if ( is_nullent( pActiveItem ) || !IsCustomWeapon( pActiveItem, WEAPON_KEY ) )
 		return;
 
 	set_cd( CD_Handle, CD_flNextAttack, 2.0 );
@@ -211,7 +213,7 @@ public FM_Hook_UpdateClientData_Post( const pPlayer, const iSendWeapons, const C
 /* ~ [ ReAPI ] ~ */
 public CWeaponBox_SetModel_Pre( const pWeaponBox, const szModel[ ] ) 
 {
-	if ( !IsCustomWeapon( UTIL_GetWeaponBoxItem( pWeaponBox ), gl_iAllocString_WeaponUId ) )
+	if ( !IsCustomWeapon( UTIL_GetWeaponBoxItem( pWeaponBox ), WEAPON_KEY ) )
 		return HC_CONTINUE;
 
 	SetHookChainArg( 2, ATYPE_STRING, WEAPON_MODEL_WORLD );
@@ -244,7 +246,7 @@ public CBasePlayerWeapon__IsPenetrableEntity_Post( const Vector3( vecStart ), Ve
 /* ~ [ HamSandwich ] ~ */
 public CBasePlayerWeapon__Spawn_Post( const pItem ) 
 {
-	if ( !IsCustomWeapon( pItem, gl_iAllocString_WeaponUId ) )
+	if ( !IsCustomWeapon( pItem, WEAPON_KEY ) )
 		return;
 
 	SetWeaponClip( pItem, WEAPON_MAX_CLIP );
@@ -260,7 +262,7 @@ public CBasePlayerWeapon__Spawn_Post( const pItem )
 
 public CBasePlayerWeapon__Deploy_Post( const pItem ) 
 {
-	if ( !IsCustomWeapon( pItem, gl_iAllocString_WeaponUId ) )
+	if ( !IsCustomWeapon( pItem, WEAPON_KEY ) )
 		return;
 
 	new pPlayer = get_member( pItem, m_pPlayer );
@@ -278,7 +280,7 @@ public CBasePlayerWeapon__Deploy_Post( const pItem )
 
 public CBasePlayerWeapon__Holster_Post( const pItem ) 
 {
-	if ( !IsCustomWeapon( pItem, gl_iAllocString_WeaponUId ) )
+	if ( !IsCustomWeapon( pItem, WEAPON_KEY ) )
 		return;
 
 	new pPlayer = get_member( pItem, m_pPlayer );
@@ -291,7 +293,7 @@ public CBasePlayerWeapon__Holster_Post( const pItem )
 	public CBasePlayerWeapon__AddToPlayer_Post( const pItem, const pPlayer ) 
 	{
 		new iWeaponUId = get_entvar( pItem, var_impulse );
-		if ( iWeaponUId != 0 && iWeaponUId != gl_iAllocString_WeaponUId )
+		if ( iWeaponUId != 0 && iWeaponUId != WEAPON_KEY )
 			return;
 
 		UTIL_WeaponList( MSG_ONE, pPlayer, pItem );
@@ -300,7 +302,7 @@ public CBasePlayerWeapon__Holster_Post( const pItem )
 
 public CBasePlayerWeapon__Reload_Post( const pItem ) 
 {
-	if ( !IsCustomWeapon( pItem, gl_iAllocString_WeaponUId ) )
+	if ( !IsCustomWeapon( pItem, WEAPON_KEY ) )
 		return;
 
 	new pPlayer = get_member( pItem, m_pPlayer );
@@ -319,7 +321,7 @@ public CBasePlayerWeapon__Reload_Post( const pItem )
 
 public CBasePlayerWeapon__WeaponIdle_Pre( const pItem ) 
 {
-	if ( !IsCustomWeapon( pItem, gl_iAllocString_WeaponUId ) || get_member( pItem, m_Weapon_flTimeWeaponIdle ) > 0.0 )
+	if ( !IsCustomWeapon( pItem, WEAPON_KEY ) || get_member( pItem, m_Weapon_flTimeWeaponIdle ) > 0.0 )
 		return HAM_IGNORED;
 
 	new pPlayer = get_member( pItem, m_pPlayer );
@@ -332,7 +334,7 @@ public CBasePlayerWeapon__WeaponIdle_Pre( const pItem )
 
 public CBasePlayerWeapon__PrimaryAttack_Pre( const pItem ) 
 {
-	if ( !IsCustomWeapon( pItem, gl_iAllocString_WeaponUId ) )
+	if ( !IsCustomWeapon( pItem, WEAPON_KEY ) )
 		return HAM_IGNORED;
 
 	new iClip = GetWeaponClip( pItem );
