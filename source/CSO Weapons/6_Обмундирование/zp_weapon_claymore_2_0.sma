@@ -170,9 +170,6 @@ enum {
 	SpriteEffect_Explode3
 };
 
-#if !defined _reapi_included
-	#include <non_reapi_support>
-
 	enum {
 		ClaymoreState_Idle = 0,
 		ClaymoreState_Detonate,
