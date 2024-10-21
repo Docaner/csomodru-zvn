@@ -7,12 +7,12 @@
 #include <smart_effects>
 #include <api_maxspeed>
 #include <api_flame>
-#include <zc_addon_zclasses>
+//#include <zc_addon_zclasses>
 #include <zc_addon_zchoose>
 
-/*//Натив, который получает рандомный звук горения
+//Натив, который получает рандомный звук горения
 native bool:zp_get_random_burn_sound(const pClassId, szSound[], iLen);
-*/
+
 
 /**
  * Модель пламени
@@ -301,8 +301,8 @@ stock set_pmove_speed(Float:flValue)
 	{
 		new szSoundBurn[64]; 
 
-		//zp_get_random_burn_sound(zp_get_user_zombie_class(pVictim), szSoundBurn, charsmax(szSoundBurn));
-		zc_get_zclass_sound(zc_get_user_zclass(pVictim), ZMSoundType:e_SoundBurn, szSoundBurn, charsmax(szSoundBurn));
+		zp_get_random_burn_sound(zp_get_user_zombie_class(pVictim), szSoundBurn, charsmax(szSoundBurn));
+		//zc_get_zclass_sound(zc_get_user_zclass(pVictim), ZMSoundType:e_SoundBurn, szSoundBurn, charsmax(szSoundBurn));
 
 		rh_emit_sound2(pVictim, 0, CHAN_VOICE, szSoundBurn);
 
