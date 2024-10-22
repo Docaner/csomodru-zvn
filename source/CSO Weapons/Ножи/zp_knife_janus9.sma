@@ -100,7 +100,7 @@ enum _: eAttackType
 
 #define JANUS9_WEAPON_REFERENCE "weapon_knife"
 #define JANUS9_ANIM_EXTENSION "knife" // CSO: tomahawk
-#define JANUS9_ANIM_EXTENSION_B "knife" // CSO: skullaxe
+#define JANUS9_ANIM_EXTENSION_B "skullaxe" // CSO: skullaxe
 
 #define JANUS9_MODEL_VIEW "models/x/v_janus9.mdl"
 #define JANUS9_MODEL_PLAYER_A "models/x/p_janus9_a.mdl"
@@ -136,12 +136,15 @@ new const JANUS9_SOUNDS[][] =
 	"weapons/janus9_endsignal.wav" // 7 - End signal
 };
 
+native zp_register_knife(const szName[]);
+forward zp_knife_selected(id, iKnife, iOldKnife);
+
 new gl_iBitUserHasJanus9,
 	
 	gl_iszModelIndexBloodSpray,
 	gl_iszModelIndexBloodDrop,
 
-	gl_iItemID;
+	g_iKnife;
 
 public plugin_init()
 {
@@ -159,7 +162,16 @@ public plugin_init()
 	RegisterHam(Ham_Weapon_PrimaryAttack, 	JANUS9_WEAPON_REFERENCE, "CKnife__PrimaryAttack_Pre", false);
 	RegisterHam(Ham_Weapon_SecondaryAttack,	JANUS9_WEAPON_REFERENCE, "CKnife__SecondaryAttack_Pre", false);
 
-	gl_iItemID = zp_register_extra_item("JANUS-IX \d(Melee)", 20, ZP_TEAM_HUMAN);
+	g_iKnife = zp_register_knife("Janus-9");
+}
+
+public zp_knife_selected(iPlayer, iNew, iOld)
+{
+	if(g_iKnife == iNew && iNew != iOld)
+		Set_Bit(gl_iBitUserHasJanus9, iPlayer);
+
+	if(g_iKnife == iOld && iNew != iOld)
+		Reset_Bit(gl_iBitUserHasJanus9, iPlayer);
 }
 
 public plugin_precache()
@@ -202,7 +214,7 @@ public Command__DelJanus9(iPlayer) return Reset_Bit(gl_iBitUserHasJanus9, iPlaye
 /* [ Zombie Plague ] */
 public zp_extra_item_selected(iPlayer, iItemID)
 {
-	if(iItemID != gl_iItemID) return PLUGIN_HANDLED;
+	if(iItemID != g_iKnife) return PLUGIN_HANDLED;
 
 	if(IsUserHasJanus9(iPlayer))
 	{
