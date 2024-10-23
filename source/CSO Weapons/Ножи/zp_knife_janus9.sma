@@ -112,14 +112,14 @@ enum _: eAttackType
 
 // Slash
 #define JANUS9_SLASH_DAMAGE 200.0
-#define JANUS9_SLASH_DISTANCE 100.0
+#define JANUS9_SLASH_DISTANCE 50.0
 
 new Float: flAngles_Slash[] = { 0.0, 2.5, -2.5, 5.0, -5.0, 7.5, -7.5 };
 new Float: flAnglesUp_Slash[] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
 
 // Stab
-#define JANUS9_STAB_DAMAGE 1300.0
-#define JANUS9_STAB_DISTANCE 150.0
+#define JANUS9_STAB_DAMAGE 300.0
+#define JANUS9_STAB_DISTANCE 100.0
 
 new Float: flAngles_Stab[] = { 0.0, -2.5, 2.5, -5.0, 5.0, -7.5, 7.5, -10.0, 10.0, -12.5, 12.5, -15.0, 15.0, -17.5, 17.5, -20.0, 2.0 };
 new Float: flAnglesUp_Stab[] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
@@ -388,7 +388,7 @@ public CKnife__SecondaryAttack_Pre(iItem)
 	set_pdata_int(iItem, m_iHasJanusMode, 0, linux_diff_weapon);
 
 	UTIL_SendWeaponAnim(iPlayer, random_num(JANUS9_ANIM_STAB1, JANUS9_ANIM_STAB2));
-	set_pev(iPlayer, pev_weaponmodel2, JANUS9_MODEL_PLAYER_B);
+	set_pev(iPlayer, pev_weaponmodel2, JANUS9_MODEL_PLAYER_A); //JANUS9_MODEL_PLAYER_B
 
 	// Player animation
 	static szAnimation[64];

@@ -4,6 +4,7 @@
 #include <reapi>
 #include <xs>
 #include <zombieplague>
+#include <zpe_lvl>
 
 /*
 	* Запретить ножи (необходимо для пилы)
@@ -46,7 +47,7 @@ new g_szKnivesFile[] = "addons/amxmodx/configs/zpe_mode/addon_knives.ini" // Ф�
 
 new Array:g_asName, Array:g_asDescription, Array:g_asModel_V, Array:g_asModel_P, 
 	Array:g_aaSndDeploy, Array:g_aaSndHit, Array:g_aaSndHitWall, Array:g_aaSndSlash, 
-	Array:g_aaSndStab, Array:g_afJump, Array:g_afDamage, Array:g_afKnockback, Array:g_aiFlag;
+	Array:g_aaSndStab, Array:g_afJump, Array:g_afDamage, Array:g_afKnockback, Array:g_aiFlag, Array:g_aiLvl;
 
 new g_iUserKnife[33], g_iUserBlock[33], g_iMenuPosition[33];
 
@@ -67,6 +68,7 @@ public plugin_precache()
 	g_afDamage = ArrayCreate();
 	g_afKnockback = ArrayCreate();
 	g_aiFlag = ArrayCreate();
+	g_aiLvl = ArrayCreate();
 
 	load_knives();
 }
@@ -141,6 +143,7 @@ public plugin_end()
 	ArrayDestroy(g_afDamage);
 	ArrayDestroy(g_afKnockback);
 	ArrayDestroy(g_aiFlag);
+	ArrayDestroy(g_aiLvl);
 }
 
 public plugin_natives()
@@ -283,7 +286,7 @@ Show_KnivesMenu(id, iPos)
 	}
 
 	new iPagesNum = ArraySize(g_asName),
-		szName[64], szDescription[256], iFlag,
+		szName[64], szDescription[256], iFlag, iLvl,
 		szMenu[512], iKeys = (1<<2|1<<9), 
 	iLen = formatex(szMenu, charsmax(szMenu), "\yВыберите нож \w[%d|%d]^n^n", iPos + 1, iPagesNum);
 	
@@ -294,14 +297,20 @@ Show_KnivesMenu(id, iPos)
 	iLen += formatex(szMenu[iLen], charsmax(szMenu) - iLen, "\w%s^n^n", szDescription);
 
 	iFlag = ArrayGetCell(g_aiFlag, iPos);
+	iLvl = ArrayGetCell(g_aiLvl, iPos);
 
 	iLen += formatex(szMenu[iLen], charsmax(szMenu) - iLen, "\r3. %sВыбрать^n",
-	 	((!iFlag || get_user_flags(id) & iFlag) && g_iUserKnife[id] != iPos) ? "\w" : "\d");
+	 	(((!iFlag || get_user_flags(id) & iFlag) && g_iUserKnife[id] != iPos)) ? "\w" : "\d")
 	
 	if(!iFlag || get_user_flags(id) & iFlag)
 		iLen += formatex(szMenu[iLen], charsmax(szMenu) - iLen, "^n");
 	else 
 		iLen += formatex(szMenu[iLen], charsmax(szMenu) - iLen, "\r>> \wКупить: \ycsomod.ru^n");
+
+	if(zpe_get_user_lvl(id) >= iLvl)
+		iLen += formatex(szMenu[iLen], charsmax(szMenu) - iLen, "^n");
+	else 
+		iLen += formatex(szMenu[iLen], charsmax(szMenu) - iLen, "\r>> \yНедостаточный уровень.^n");
 
 	if(iPos > 0)
 	{
@@ -332,6 +341,8 @@ public Handle_KnivesMenu(id, iKey)
 
 			new iFlag = ArrayGetCell(g_aiFlag, iTarget);
 
+			new iLvl = ArrayGetCell(g_aiLvl, iTarget);
+
 			if(iFlag && ~get_user_flags(id) & iFlag)
 			{
 				UTIL_SayText(id, "!g[ZP] !yУ вас нет доступа. Купить: !gCSOMOD.RU");
@@ -341,6 +352,12 @@ public Handle_KnivesMenu(id, iKey)
 			if(iTarget == g_iUserKnife[id])
 			{
 				UTIL_SayText(id, "!g[ZP] !yДанный нож уже !gвыбран!y. Выберите другой.");
+				return Show_KnivesMenu(id, g_iMenuPosition[id]);
+			}
+
+			if(zpe_get_user_lvl(id) < iLvl)
+			{
+				UTIL_SayText(id, "!g[ZP] !yУ Вас недостаточный !gуровень!y. Выберите другой.");
 				return Show_KnivesMenu(id, g_iMenuPosition[id]);
 			}
 
@@ -360,7 +377,7 @@ load_knives()
 		return 0;
 	}
 
-	new szBuffer[1024], szKey[64], iLine, iLen, iSize,
+	new szBuffer[1024], szKey[64], iLine, iLen, iSize, iLvl,
 		szName[64], szDescription[256], szModel_V[128], szModel_P[128],
 		Array:aSndDeploy = ArrayCreate(128), Array:aSndHit = ArrayCreate(128),
 		Array:aSndHitWall = ArrayCreate(128), Array:aSndSlash = ArrayCreate(128), Array:aSndStab = ArrayCreate(128),
@@ -375,11 +392,11 @@ load_knives()
 		{
 			Push_Knife(szName, szDescription, szModel_V, szModel_P, 
 				aSndDeploy, aSndHit, aSndHitWall, aSndSlash, aSndStab,
-				fJump, fDamage, fKnockback, iFlag);
+				fJump, fDamage, fKnockback, iFlag, iLvl);
 
 			szName = ""; szDescription = ""; szModel_V = ""; szModel_P = "";
 			fJump = 0.0; fDamage = 0.0; fKnockback = 0.0;
-			iFlag = 0;
+			iFlag = 0; iLvl = 0;
 
 			aSndDeploy = ArrayCreate(128); aSndHit = ArrayCreate(128); aSndHitWall = ArrayCreate(128);
 			aSndSlash = ArrayCreate(128); aSndStab = ArrayCreate(128);
@@ -417,19 +434,21 @@ load_knives()
 		else if(equal(szKey, "KNOCKBACK"))
 			fKnockback = str_to_float(szBuffer);
 		else if(equal(szKey, "VIP FLAG"))
-			iFlag = read_flags(szBuffer);		
+			iFlag = read_flags(szBuffer);
+		else if(equal(szKey, "LVL"))
+			iLvl = str_to_num(szBuffer);		
 	}
 
 	Push_Knife(szName, szDescription, szModel_V, szModel_P, 
 		aSndDeploy, aSndHit, aSndHitWall, aSndSlash, aSndStab,
-		fJump, fDamage, fKnockback, iFlag);
+		fJump, fDamage, fKnockback, iFlag, iLvl);
 
 	return 1;
 }
 
 Push_Knife(const szName[64], szDescription[256], const szModel_V[128], const szModel_P[128],
 	Array:aSndDeploy, Array:aSndHit, Array:aSndHitWall, Array:aSndSlash, Array:aSndStab,
-	const Float:fJump, const Float:fDamage, const Float:fKnockback, const iFlag)
+	const Float:fJump, const Float:fDamage, const Float:fKnockback, const iFlag, const iLvl)
 {
 
 	replace_all(szDescription, charsmax(szDescription), "\n", "^n");
@@ -487,6 +506,7 @@ Push_Knife(const szName[64], szDescription[256], const szModel_V[128], const szM
 	ArrayPushCell(g_afDamage, cell:fDamage);
 	ArrayPushCell(g_afKnockback, cell:fKnockback);
 	ArrayPushCell(g_aiFlag, iFlag);
+	ArrayPushCell(g_aiLvl, iLvl);
 }
 
 
@@ -564,6 +584,12 @@ public ZPE_SetUserKnife(id, iKnife)
 	new iReturn = 1;
 
 	if(iKnife < 0 || iKnife >= ArraySize(g_asName) || ~get_user_flags(id) & ArrayGetCell(g_aiFlag, iKnife))
+	{
+		iKnife = KNIFE_DEFAULT;
+		iReturn = 0;
+	}
+
+	if(iKnife < 0 || iKnife >= ArraySize(g_asName) || ~zpe_get_user_lvl(id) >= ArrayGetCell(g_aiLvl, iKnife))
 	{
 		iKnife = KNIFE_DEFAULT;
 		iReturn = 0;
