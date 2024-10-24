@@ -2,6 +2,7 @@
 #include <fakemeta>
 #include <hamsandwich>
 #include <zombieplague>
+#include <smart_effects>
 
 #define IsCustomItem(%1) (get_pdata_int(%1, m_iId, linux_diff_weapon) == CSW_KNIFE)
 #define IsUserHasJanus9(%1) Get_Bit(gl_iBitUserHasJanus9, %1)
@@ -56,6 +57,7 @@
 #define m_flNextAttack 83
 
 // CBasePlayer
+#define m_flPainShock 108
 #define m_iPlayerTeam 114
 #define m_flLastAttackTime 220
 #define m_pActiveItem 373
@@ -111,15 +113,17 @@ enum _: eAttackType
 #define JANUS9_ACTIVE_TIME 3.0 // Active time for JANUS mode
 
 // Slash
-#define JANUS9_SLASH_DAMAGE 200.0
+#define JANUS9_SLASH_DAMAGE 150.0
 #define JANUS9_SLASH_DISTANCE 50.0
 
 new Float: flAngles_Slash[] = { 0.0, 2.5, -2.5, 5.0, -5.0, 7.5, -7.5 };
 new Float: flAnglesUp_Slash[] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
 
 // Stab
-#define JANUS9_STAB_DAMAGE 300.0
+#define JANUS9_STAB_DAMAGE 200.0
 #define JANUS9_STAB_DISTANCE 100.0
+
+#define JANUS9_KNOCKBACK_SLASH	150.5
 
 new Float: flAngles_Stab[] = { 0.0, -2.5, 2.5, -5.0, 5.0, -7.5, 7.5, -10.0, 10.0, -12.5, 12.5, -15.0, 15.0, -17.5, 17.5, -20.0, 2.0 };
 new Float: flAnglesUp_Stab[] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
@@ -161,6 +165,7 @@ public plugin_init()
 	RegisterHam(Ham_Weapon_WeaponIdle, 		JANUS9_WEAPON_REFERENCE, "CKnife__Idle_Pre", false);
 	RegisterHam(Ham_Weapon_PrimaryAttack, 	JANUS9_WEAPON_REFERENCE, "CKnife__PrimaryAttack_Pre", false);
 	RegisterHam(Ham_Weapon_SecondaryAttack,	JANUS9_WEAPON_REFERENCE, "CKnife__SecondaryAttack_Pre", false);
+	RegisterHam(Ham_Spawn, "player", "fw_Player_Spawn", true);
 
 	g_iKnife = zp_register_knife("Janus-9");
 }
@@ -226,12 +231,29 @@ public zp_extra_item_selected(iPlayer, iItemID)
 	return PLUGIN_HANDLED;
 }
 
-public zp_user_infected_post(iPlayer)
+/* public zp_user_infected_post(iPlayer)
 {
 	if(!is_user_connected(iPlayer)) return;
 
 	if(IsUserHasJanus9(iPlayer))
 		Command__DelJanus9(iPlayer);
+} */
+
+public zp_user_humanized_post(iPlayer, survivor)
+{
+	if(!is_user_connected(iPlayer)) return;
+
+	if(IsUserHasJanus9(iPlayer))
+		Command__GiveJanus9(iPlayer);
+}
+
+public fw_Player_Spawn(iPlayer) 
+{
+	if(!IsUserHasJanus9(iPlayer) || zp_get_user_zombie(iPlayer) || !is_user_alive(iPlayer)) return HAM_IGNORED;
+	
+	Command__DelJanus9(iPlayer);
+	Command__GiveJanus9(iPlayer);
+	return HAM_HANDLED;
 }
 
 /* [ Fakemeta ] */
@@ -548,6 +570,8 @@ stock UTIL_FakeTraceAttack(iVictim, iAttacker, Float: flDamage, Float: vecDirect
 	
 	set_pdata_int(iVictim, m_LastHitGroup, iHitgroup, linux_diff_player);
 
+	if(!IsNPC(iVictim)) FakeKnockBack(iVictim, vecDirection, JANUS9_KNOCKBACK_SLASH);
+
 	switch(iHitgroup) 
 	{
 		case HIT_HEAD:                  flDamage *= 3.0;
@@ -568,6 +592,17 @@ stock UTIL_FakeTraceAttack(iVictim, iAttacker, Float: flDamage, Float: vecDirect
 	}
 
 	return 1;
+}
+
+public FakeKnockBack(iPlayer, Float:vecDirection[3], Float:flKnockBack) 
+{
+	set_pdata_float(iPlayer, m_flPainShock, 1.0, 5);
+	static Float:vecVelocity[3]; pev(iPlayer, pev_velocity, vecVelocity);
+	if(pev(iPlayer, pev_flags) & FL_DUCKING) flKnockBack *= 0.45;
+	vecVelocity[0] = vecDirection[0] * flKnockBack;
+	vecVelocity[1] = vecDirection[1] * flKnockBack;
+	vecVelocity[2] = 0.0;
+	set_pev(iPlayer, pev_velocity, vecVelocity);
 }
 
 public UTIL_BloodDrips(Float:vecOrigin[3], iColor, iAmount)

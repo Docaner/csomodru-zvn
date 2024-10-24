@@ -159,6 +159,11 @@ public client_putinserver(id)
 	ZPE_SetUserKnife(id, KNIFE_DEFAULT);
 }
 
+public zp_user_humanized_post(id, survivor)
+{
+	deploy_if_knife(id)
+}
+
 public HM_KnifeDeploy_Post(iEnt)
 {
 	new id = get_member(iEnt, m_pPlayer);
@@ -310,7 +315,7 @@ Show_KnivesMenu(id, iPos)
 	if(zpe_get_user_lvl(id) >= iLvl)
 		iLen += formatex(szMenu[iLen], charsmax(szMenu) - iLen, "^n");
 	else 
-		iLen += formatex(szMenu[iLen], charsmax(szMenu) - iLen, "\r>> \yНедостаточный уровень.^n");
+		iLen += formatex(szMenu[iLen], charsmax(szMenu) - iLen, "\r>> \yТребуемый уровень - %d.^n", iLvl);
 
 	if(iPos > 0)
 	{
