@@ -18,8 +18,8 @@
 /* ~ [ Macroses ] ~ */
 #define EJECT_BRASS						// Comment this line if u dont need eject brass (shell)
 #define CUSTOM_WEAPONLIST 				// Comment this line if u dont need weapon list
-#define CUSTOM_MUZZLEFLASH				// Comment this line if u dont need custom muzzle flash
-#define WALLPUFF_SMOKE					// Comment this line if u dont need wallpuff smoke
+//#define CUSTOM_MUZZLEFLASH				// Comment this line if u dont need custom muzzle flash
+//#define WALLPUFF_SMOKE					// Comment this line if u dont need wallpuff smoke
 #define DYNAMIC_CROSSHAIR 				// Comment this line if u dont need dynamic crosshair (With it not work's plugin Unlimited Clip)
 
 #define LOWER_LIMIT_OF_ENTITIES			100
