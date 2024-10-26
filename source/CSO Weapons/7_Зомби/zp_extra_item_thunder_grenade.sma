@@ -19,7 +19,7 @@ native zp_get_user_hero(iPlayer);
 #define WEAPON_CLIP_MAX		1
 #define WEAPON_WLIST		"zp_br_cso/grenade/weapon_shock"
 
-#define WEAPON_ICON_NAME	"dmg_generic"
+#define WEAPON_ICON_NAME	"dmg_chem"
 #define WEAPON_ICON_COLOR	{255, 0, 0}
 
 #define GRENADE_SPECIAL_CODE 8375647
@@ -161,9 +161,7 @@ public zp_round_ended(winteam)
 	if(is_nullent(pEntity) || get_entvar(pEntity, var_flTimeStepSound) != GRENADE_SPECIAL_CODE)
 		return HC_CONTINUE;
 
-	//6) Звуки падения такие же как и у обычной гранаты
-	// Здесь нужен путь до звука касания у гранаты HE. Узнай какой
-	if(!equal(szSample, "weapons/grenade_hit", 15))
+	if(!equal(szSample, "weapons/he_bounce-1", 15))
 		return HC_CONTINUE;
 
 	SetHookChainArg(4, ATYPE_STRING, GRENADE_HIT_SOUNDS[random(sizeof(GRENADE_HIT_SOUNDS))]);
@@ -197,7 +195,9 @@ public zp_round_ended(winteam)
 
 	//2) После действия гранаты, у людей нет отдачи (именно эффект тряски экрана при стрельбе) на оружии до момента нового раунда или перезаражения. С этим я не знаю что делать
 	// Забыл перетащить функцию Think
-	SetThink(pEnt, "@RG_Think_ThunderGrenade");
+
+	/* БЕСПОЛЕЗНАЯ ФИГНЯ */
+	/* SetThink(pEnt, "@RG_Think_ThunderGrenade"); */
 }
 
 
@@ -224,7 +224,7 @@ public zp_round_ended(winteam)
 	}
 
 	set_entvar(pEnt, var_nextthink, flGameTime + GRENADE_EFFECT_THINK);
-}
+} 
 
 @RG__Explode_HeGrenade_Pre(pEnt, tHandle, iDamageBits)
 {
@@ -308,14 +308,7 @@ stock Thunder_Explode(pEnt)
 	rh_emit_sound2(pEnt, 0, CHAN_WEAPON, GRENADE_EXPLODE_SOUND, VOL_NORM, ATTN_NORM, 0, PITCH_HIGH);
 
 	new Float:vecOrigin[3]; get_entvar(pEnt, var_origin, vecOrigin);
-	// new Float:vecTorus[3];
 
-	// Бред
-	// for(new i; i < 100; i++)
-	// {
-	// 	xs_vec_copy(vecOrigin, vecTorus);
-    //     MSG_LavaSplash(vecTorus)
-	// }
 	MSG_LavaSplash(vecOrigin)
 
 	if(g_bRoundEnd) return;
@@ -366,7 +359,7 @@ stock Thunder_EffectStart(pPlayer)
 		SetBit(g_iUserBitEffect, pPlayer);
 	}
 	Thunder_Kill(pPlayer)
-    
+    SetThink(pEnt, "@RG_Think_ThunderGrenade");
 	return true;
 }
 
@@ -383,19 +376,20 @@ stock Thunder_Kill(iVictim)
 
 	new Float:vecPunch[3]; for(new i; i < 2; i++) vecPunch[i] = GRENADE_EFFECT_PUNCH; 
 	set_entvar(iVictim, var_punchangle, vecPunch);
+	Thunder_EffectDisable(iVictim)
 }
 
-stock Thunder_EffectDisable(pPlayer)
+stock Thunder_EffectDisable(iVictim)
 {
-	if(!IsSetBit(g_iUserBitEffect, pPlayer))
+	if(!IsSetBit(g_iUserBitEffect, iVictim))
 		return;
 
-	if(!is_nullent(g_iEnt_Effect[pPlayer])) 
-		rg_remove_ent(g_iEnt_Effect[pPlayer]);
+	if(!is_nullent(g_iEnt_Effect[iVictim])) 
+		rg_remove_ent(g_iEnt_Effect[iVictim]);
 
-	g_iEnt_Effect[pPlayer] = NULLENT;
+	g_iEnt_Effect[iVictim] = NULLENT;
 
-	ClearBit(g_iUserBitEffect, pPlayer);
+	ClearBit(g_iUserBitEffect, iVictim);
 
 	if(!g_iUserBitEffect) SwitchToggle(false);
 }
