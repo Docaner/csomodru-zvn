@@ -13,12 +13,12 @@
 #define ITEM_TEAM ZP_TEAM_ZOMBIE
 
 #define WEAPON_REFERENCE 	"weapon_hegrenade"
-#define WEAPON_IMPULSE		1523
+#define WEAPON_IMPULSE		1245
 #define WEAPON_CLIP_MAX		1
 #define WEAPON_WLIST		"zp_br_cso/grenade/weapon_shock"
 
-#define WEAPON_ICON_NAME	"dmg_shock"
-#define WEAPON_ICON_COLOR	{66, 177, 255}
+#define WEAPON_ICON_NAME	"dmg_generic"
+#define WEAPON_ICON_COLOR	{255, 0, 0}
 
 #define GRENADE_SPECIAL_CODE 8375647
 #define GRENADE_MODEL_WORLD "models/zp_br_cso/grenade/w_jumpbomb_b2.mdl"
@@ -27,7 +27,7 @@
 #define GRENADE_EFFECT_RADIUS 100.0
 #define GRENADE_EFFECT_DURATION 10.0
 //#define GRENADE_EFFECT_DMG random_float(20.0, 30.0)
-#define GRENADE_EFFECT_PUNCH random_float(-18.0, 18.0)
+#define GRENADE_EFFECT_PUNCH random_float(-50.0, 50.0)
 #define GRENADE_EFFECT_THINK 0.25
 
 #define GRENADE_EXPLODE_SOUND "zp_br_cso/zombie/zombie_grenade_shock_explode.wav"
@@ -111,9 +111,9 @@ public plugin_init()
 	arrayset(g_iEnt_Effect, NULLENT, sizeof g_iEnt_Effect);
 }
 
-public client_disconnected(pPlayer) Shock_EffectDisable(pPlayer);
-public zp_user_infected_pre(pPlayer) Shock_EffectDisable(pPlayer);
-@RG__PlayerKilled_Pre(pVictim) Shock_EffectDisable(pVictim);
+public client_disconnected(pPlayer) Thunder_EffectDisable(pPlayer);
+public zp_user_infected_pre(pPlayer) Thunder_EffectDisable(pPlayer);
+@RG__PlayerKilled_Pre(pVictim) Thunder_EffectDisable(pVictim);
 
 public zp_extra_item_selected(iPlayer, iItem) 
 {
@@ -131,7 +131,7 @@ public zp_round_ended(winteam)
 	{
 		if(!is_user_alive(iPlayer)) continue;
 		
-		Shock_EffectDisable(iPlayer);
+		Thunder_EffectDisable(iPlayer);
 	}
 }
 
@@ -191,7 +191,7 @@ public zp_round_ended(winteam)
 	MSG_BeamFollow(pEnt, g_iModelIndex_Trail, 1.0, 3, GRENADE_TRAIL_COLORALPHA);
 	UTIL_SetRendering(pEnt, kRenderFxGlowShell, GRENADE_RENDER_COLOR, kRenderNormal, 0.0);
 
-	//SetThink(pEnt, "@RG_Think_ShockGrenade");
+	//SetThink(pEnt, "@RG_Think_ThunderGrenade");
 }
 
 @RG__Explode_HeGrenade_Pre(pEnt, tHandle, iDamageBits)
@@ -199,7 +199,7 @@ public zp_round_ended(winteam)
 	if(get_entvar(pEnt, var_flTimeStepSound) != GRENADE_SPECIAL_CODE)
 		return HC_CONTINUE;
 
-	Shock_Explode(pEnt);
+	Thunder_Explode(pEnt);
 	rg_remove_ent(pEnt);
 
 	return HC_BREAK;
@@ -271,7 +271,7 @@ stock WeaponDisableEffects(pPlayer)
 	set_entvar(pPlayer, var_punchangle, vecPunch);
 }
 
-stock Shock_Explode(pEnt)
+stock Thunder_Explode(pEnt)
 {
 	rh_emit_sound2(pEnt, 0, CHAN_WEAPON, GRENADE_EXPLODE_SOUND, VOL_NORM, ATTN_NORM, 0, PITCH_HIGH);
 
@@ -281,9 +281,7 @@ stock Shock_Explode(pEnt)
 	for(new i; i < 100; i++)
 	{
 		xs_vec_copy(vecOrigin, vecTorus);
-		/* MSG_BeamTorus(vecTorus, GRENADE_EFFECT_RADIUS - 57.5 * i, g_iModelIndex_Torus, _, _, 0.4, 40, _, GRENADE_TORUS_COLORALPHA[i]) */
         MSG_LavaSplash(vecTorus)
-        
 	}
 
 	if(g_bRoundEnd) return;
@@ -332,53 +330,27 @@ stock Thunder_EffectStart(pPlayer)
 		if(!g_iUserBitEffect) SwitchToggle(true);
 		SetBit(g_iUserBitEffect, pPlayer);
 	}
-
-    MSG_ScreenFade(pPlayer, 0.0, GRENADE_EFFECT_DURATION, 0, {255, 255, 255, 255})
-    Thunder_Kill(pPlayer, pEnt, 500.0, DMG_NEVERGIB | DMG_CLUB)
+    Thunder_Kill(pPlayer)
     
-    
-    
-	/* MSG_ScreenShake(pPlayer, 10.0, GRENADE_EFFECT_DURATION, 1.0) */
-
-	/* new Float:flGameTime = get_gametime();
-
-	set_entvar(pEnt, var_owner, pPlayer);
-	set_entvar(pEnt, var_nextthink, flGameTime);
-	set_entvar(pEnt, var_ltime, flGameTime + GRENADE_EFFECT_DURATION); */
 	return true;
 }
 
-stock Thunder_Kill(iVictim, iAttacker, Float: flDamage, ibitsDamageBits)
+stock Thunder_Kill(iVictim)
 {
-    ExecuteHamB(Ham_TakeDamage, iVictim, iAttacker, iAttacker, flDamage, ibitsDamageBits);
-}
-
-/* @RG_Think_ShockEffect(pEnt)
-{
-	new Float:flGameTime = get_gametime();
-
-	new iColorAlpha[4]; for(new i; i < 3; i++) iColorAlpha[i] = random(256);
-	iColorAlpha[3] = 120;
-
-	new pPlayer = get_entvar(pEnt, var_owner);
-
-	MSG_ScreenFade(pPlayer, GRENADE_EFFECT_THINK, GRENADE_EFFECT_THINK, 0, iColorAlpha);
-
-	new Float:vecPunch[3]; for(new i; i < 2; i++) vecPunch[i] = GRENADE_EFFECT_PUNCH; 
-
-	set_entvar(pEnt, var_punchangle, vecPunch)
-	set_entvar(pPlayer, var_punchangle, vecPunch);
-
-	if(Float:get_entvar(pEnt, var_ltime) <= flGameTime)
-	{	
-		Shock_EffectDisable(pPlayer);
-		return;
+	new iItem = get_member(iVictim, m_pActiveItem);
+	new iSlot = rg_get_iteminfo(iItem, ItemInfo_iSlot);
+	
+	if(!is_nullent(iItem))
+	{
+		if(0 <= iSlot <= 1)
+		rg_drop_items_by_slot(iVictim, InventorySlotType:++iSlot);
 	}
 
-	set_entvar(pEnt, var_nextthink, flGameTime + GRENADE_EFFECT_THINK);
-} */
+	new Float:vecPunch[3]; for(new i; i < 2; i++) vecPunch[i] = GRENADE_EFFECT_PUNCH; 
+	set_entvar(iVictim, var_punchangle, vecPunch);
+}
 
-stock Shock_EffectDisable(pPlayer)
+stock Thunder_EffectDisable(pPlayer)
 {
 	if(!IsSetBit(g_iUserBitEffect, pPlayer))
 		return;

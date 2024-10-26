@@ -3,6 +3,7 @@
 #include <hamsandwich>
 #include <zombieplague>
 #include <smart_effects>
+#include <zp_system>
 
 #define IsCustomItem(%1) (get_pdata_int(%1, m_iId, linux_diff_weapon) == CSW_KNIFE)
 #define IsUserHasJanus9(%1) Get_Bit(gl_iBitUserHasJanus9, %1)
@@ -555,6 +556,10 @@ stock UTIL_FakeTraceAttack(iVictim, iAttacker, Float: flDamage, Float: vecDirect
 {
 	static Float: flTakeDamage; pev(iVictim, pev_takedamage, flTakeDamage);
 
+	if(zp_is_round_end() || pev(iVictim, pev_takedamage) == DAMAGE_NO ||
+		zp_get_user_zombie(iAttacker) || is_user_alive(iVictim) && !zp_get_user_zombie(iVictim) && !IsAliveNPC(iVictim)) 
+		return 0;
+
 	if(flTakeDamage == DAMAGE_NO) return 0; 
 	if(!(is_user_alive(iVictim))) return 0;
 
@@ -594,7 +599,7 @@ stock UTIL_FakeTraceAttack(iVictim, iAttacker, Float: flDamage, Float: vecDirect
 	return 1;
 }
 
-public FakeKnockBack(iPlayer, Float:vecDirection[3], Float:flKnockBack) 
+stock FakeKnockBack(iPlayer, Float:vecDirection[3], Float:flKnockBack) 
 {
 	set_pdata_float(iPlayer, m_flPainShock, 1.0, 5);
 	static Float:vecVelocity[3]; pev(iPlayer, pev_velocity, vecVelocity);
