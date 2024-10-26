@@ -8,6 +8,8 @@
 #include <smart_messages>
 #include <api_weapon_player_model>
 
+native zp_get_user_hero(iPlayer);
+
 #define ITEM_NAME "Thunder"
 #define ITEM_COST 0
 #define ITEM_TEAM ZP_TEAM_ZOMBIE
@@ -159,6 +161,8 @@ public zp_round_ended(winteam)
 	if(is_nullent(pEntity) || get_entvar(pEntity, var_flTimeStepSound) != GRENADE_SPECIAL_CODE)
 		return HC_CONTINUE;
 
+	//6) Звуки падения такие же как и у обычной гранаты
+	// Здесь нужен путь до звука касания у гранаты HE. Узнай какой
 	if(!equal(szSample, "weapons/grenade_hit", 15))
 		return HC_CONTINUE;
 
@@ -191,7 +195,35 @@ public zp_round_ended(winteam)
 	MSG_BeamFollow(pEnt, g_iModelIndex_Trail, 1.0, 3, GRENADE_TRAIL_COLORALPHA);
 	UTIL_SetRendering(pEnt, kRenderFxGlowShell, GRENADE_RENDER_COLOR, kRenderNormal, 0.0);
 
-	//SetThink(pEnt, "@RG_Think_ThunderGrenade");
+	//2) После действия гранаты, у людей нет отдачи (именно эффект тряски экрана при стрельбе) на оружии до момента нового раунда или перезаражения. С этим я не знаю что делать
+	// Забыл перетащить функцию Think
+	SetThink(pEnt, "@RG_Think_ThunderGrenade");
+}
+
+
+@RG_Think_ThunderGrenade(pEnt)
+{
+	new Float:flGameTime = get_gametime();
+
+	new iColorAlpha[4]; for(new i; i < 3; i++) iColorAlpha[i] = random(256);
+	iColorAlpha[3] = 120;
+
+	new pPlayer = get_entvar(pEnt, var_owner);
+
+	MSG_ScreenFade(pPlayer, GRENADE_EFFECT_THINK, GRENADE_EFFECT_THINK, 0, iColorAlpha);
+
+	new Float:vecPunch[3]; for(new i; i < 2; i++) vecPunch[i] = GRENADE_EFFECT_PUNCH; 
+
+	set_entvar(pEnt, var_punchangle, vecPunch)
+	set_entvar(pPlayer, var_punchangle, vecPunch);
+
+	if(Float:get_entvar(pEnt, var_ltime) <= flGameTime)
+	{	
+		Thunder_EffectDisable(pPlayer);
+		return;
+	}
+
+	set_entvar(pEnt, var_nextthink, flGameTime + GRENADE_EFFECT_THINK);
 }
 
 @RG__Explode_HeGrenade_Pre(pEnt, tHandle, iDamageBits)
@@ -276,13 +308,15 @@ stock Thunder_Explode(pEnt)
 	rh_emit_sound2(pEnt, 0, CHAN_WEAPON, GRENADE_EXPLODE_SOUND, VOL_NORM, ATTN_NORM, 0, PITCH_HIGH);
 
 	new Float:vecOrigin[3]; get_entvar(pEnt, var_origin, vecOrigin);
-	new Float:vecTorus[3];
+	// new Float:vecTorus[3];
 
-	for(new i; i < 100; i++)
-	{
-		xs_vec_copy(vecOrigin, vecTorus);
-        MSG_LavaSplash(vecTorus)
-	}
+	// Бред
+	// for(new i; i < 100; i++)
+	// {
+	// 	xs_vec_copy(vecOrigin, vecTorus);
+    //     MSG_LavaSplash(vecTorus)
+	// }
+	MSG_LavaSplash(vecOrigin)
 
 	if(g_bRoundEnd) return;
 
@@ -290,7 +324,8 @@ stock Thunder_Explode(pEnt)
 
 	for(new iPlayer = 1; iPlayer <= MaxClients; iPlayer++)
 	{
-		if(!is_user_alive(iPlayer) || zp_get_user_zombie(iPlayer))
+		//1) Оружие выпадает даже у героя, но это я еще знаю как исправить - Проверь
+		if(!is_user_alive(iPlayer) || zp_get_user_zombie(iPlayer) || zp_get_user_hero(iPlayer))
 			continue;
 
 		get_entvar(iPlayer, var_origin, vecPlayer);
@@ -330,7 +365,7 @@ stock Thunder_EffectStart(pPlayer)
 		if(!g_iUserBitEffect) SwitchToggle(true);
 		SetBit(g_iUserBitEffect, pPlayer);
 	}
-    Thunder_Kill(pPlayer)
+	Thunder_Kill(pPlayer)
     
 	return true;
 }
