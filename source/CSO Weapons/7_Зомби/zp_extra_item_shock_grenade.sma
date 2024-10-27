@@ -115,6 +115,11 @@ public client_disconnected(pPlayer) Shock_EffectDisable(pPlayer);
 public zp_user_infected_pre(pPlayer) Shock_EffectDisable(pPlayer);
 @RG__PlayerKilled_Pre(pVictim) Shock_EffectDisable(pVictim);
 
+public zp_user_humanized_pre(iPlayer, survivor)
+{
+	rg_remove_item(iPlayer, WEAPON_REFERENCE, true);
+}
+
 public zp_extra_item_selected(iPlayer, iItem) 
 {
 	if(iItem != g_iItemID) 

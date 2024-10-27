@@ -169,6 +169,10 @@ public zp_user_infected_post(iPlayer, iInfector, iNem)
 	}
 }
 
+public zp_user_humanized_pre(iPlayer, survivor)
+{
+	rg_remove_item(iPlayer, WEAPON_REFERENCE, true);
+}
 
 public zp_extra_item_selected(iPlayer, iItem) 
 {

@@ -10,14 +10,14 @@
 
 native zp_get_user_hero(iPlayer);
 
-#define ITEM_NAME "Thunder"
+#define ITEM_NAME "DropGrenade"
 #define ITEM_COST 0
 #define ITEM_TEAM ZP_TEAM_ZOMBIE
 
 #define WEAPON_REFERENCE 	"weapon_hegrenade"
 #define WEAPON_IMPULSE		1245
 #define WEAPON_CLIP_MAX		1
-#define WEAPON_WLIST		"zp_br_cso/grenade/weapon_shock"
+#define WEAPON_WLIST		"zp_br_cso/grenade/weapon_drop"
 
 #define WEAPON_ICON_NAME	"dmg_chem"
 #define WEAPON_ICON_COLOR	{255, 0, 0}
@@ -26,7 +26,7 @@ native zp_get_user_hero(iPlayer);
 #define GRENADE_MODEL_WORLD "models/zp_br_cso/grenade/w_jumpbomb_b2.mdl"
 #define GRENADE_MODEL_BODY 0
 
-#define GRENADE_EFFECT_RADIUS 100.0
+#define GRENADE_EFFECT_RADIUS 150.0
 #define GRENADE_EFFECT_DURATION 10.0
 //#define GRENADE_EFFECT_DMG random_float(20.0, 30.0)
 #define GRENADE_EFFECT_PUNCH random_float(-50.0, 50.0)
@@ -73,7 +73,7 @@ new HamHook:g_hWeaponPrimaryAttack[sizeof g_szWeaponReferences],
 
 public plugin_precache()
 {
-	register_plugin("[ZP] Extra Item: Thunder", "1.0", "Docaner & MeatGrinder")
+	register_plugin("[ZP] Extra Item: Shock", "1.0", "Docaner & MeatGrinder")
 
 	UTIL_PrecacheWeaponList(WEAPON_WLIST);
 
@@ -113,9 +113,14 @@ public plugin_init()
 	arrayset(g_iEnt_Effect, NULLENT, sizeof g_iEnt_Effect);
 }
 
-public client_disconnected(pPlayer) Thunder_EffectDisable(pPlayer);
-public zp_user_infected_pre(pPlayer) Thunder_EffectDisable(pPlayer);
-@RG__PlayerKilled_Pre(pVictim) Thunder_EffectDisable(pVictim);
+public client_disconnected(pPlayer) Drop_EffectDisable(pPlayer);
+public zp_user_infected_pre(pPlayer) Drop_EffectDisable(pPlayer);
+@RG__PlayerKilled_Pre(pVictim) Drop_EffectDisable(pVictim);
+
+public zp_user_humanized_pre(iPlayer, survivor)
+{
+	rg_remove_item(iPlayer, WEAPON_REFERENCE, true);
+}
 
 public zp_extra_item_selected(iPlayer, iItem) 
 {
@@ -133,7 +138,7 @@ public zp_round_ended(winteam)
 	{
 		if(!is_user_alive(iPlayer)) continue;
 		
-		Thunder_EffectDisable(iPlayer);
+		Drop_EffectDisable(iPlayer);
 	}
 }
 
@@ -193,45 +198,15 @@ public zp_round_ended(winteam)
 	MSG_BeamFollow(pEnt, g_iModelIndex_Trail, 1.0, 3, GRENADE_TRAIL_COLORALPHA);
 	UTIL_SetRendering(pEnt, kRenderFxGlowShell, GRENADE_RENDER_COLOR, kRenderNormal, 0.0);
 
-	//2) После действия гранаты, у людей нет отдачи (именно эффект тряски экрана при стрельбе) на оружии до момента нового раунда или перезаражения. С этим я не знаю что делать
-	// Забыл перетащить функцию Think
-
-	/* БЕСПОЛЕЗНАЯ ФИГНЯ */
-	/* SetThink(pEnt, "@RG_Think_ThunderGrenade"); */
+	//SetThink(pEnt, "@RG_Think_ShockGrenade");
 }
-
-
-@RG_Think_ThunderGrenade(pEnt)
-{
-	new Float:flGameTime = get_gametime();
-
-	new iColorAlpha[4]; for(new i; i < 3; i++) iColorAlpha[i] = random(256);
-	iColorAlpha[3] = 120;
-
-	new pPlayer = get_entvar(pEnt, var_owner);
-
-	MSG_ScreenFade(pPlayer, GRENADE_EFFECT_THINK, GRENADE_EFFECT_THINK, 0, iColorAlpha);
-
-	new Float:vecPunch[3]; for(new i; i < 2; i++) vecPunch[i] = GRENADE_EFFECT_PUNCH; 
-
-	set_entvar(pEnt, var_punchangle, vecPunch)
-	set_entvar(pPlayer, var_punchangle, vecPunch);
-
-	if(Float:get_entvar(pEnt, var_ltime) <= flGameTime)
-	{	
-		Thunder_EffectDisable(pPlayer);
-		return;
-	}
-
-	set_entvar(pEnt, var_nextthink, flGameTime + GRENADE_EFFECT_THINK);
-} 
 
 @RG__Explode_HeGrenade_Pre(pEnt, tHandle, iDamageBits)
 {
 	if(get_entvar(pEnt, var_flTimeStepSound) != GRENADE_SPECIAL_CODE)
 		return HC_CONTINUE;
 
-	Thunder_Explode(pEnt);
+	Drop_Explode(pEnt);
 	rg_remove_ent(pEnt);
 
 	return HC_BREAK;
@@ -303,13 +278,20 @@ stock WeaponDisableEffects(pPlayer)
 	set_entvar(pPlayer, var_punchangle, vecPunch);
 }
 
-stock Thunder_Explode(pEnt)
+stock Drop_Explode(pEnt)
 {
-	rh_emit_sound2(pEnt, 0, CHAN_WEAPON, GRENADE_EXPLODE_SOUND, VOL_NORM, ATTN_NORM, 0, PITCH_HIGH);
+	rh_emit_sound2(pEnt, 0, CHAN_WEAPON, GRENADE_EXPLODE_SOUND);
 
 	new Float:vecOrigin[3]; get_entvar(pEnt, var_origin, vecOrigin);
-
+	
 	MSG_LavaSplash(vecOrigin)
+
+	/* for(new i; i < sizeof GRENADE_TORUS_COLORALPHA; i++)
+	{
+		xs_vec_copy(vecOrigin, vecTorus);
+		vecTorus[2] += 15 - 2.5 * i;
+		MSG_BeamTorus(vecTorus, GRENADE_EFFECT_RADIUS - 57.5 * i, g_iModelIndex_Torus, _, _, 0.4, 40, _, GRENADE_TORUS_COLORALPHA[i])
+	} */
 
 	if(g_bRoundEnd) return;
 
@@ -317,7 +299,6 @@ stock Thunder_Explode(pEnt)
 
 	for(new iPlayer = 1; iPlayer <= MaxClients; iPlayer++)
 	{
-		//1) Оружие выпадает даже у героя, но это я еще знаю как исправить - Проверь
 		if(!is_user_alive(iPlayer) || zp_get_user_zombie(iPlayer) || zp_get_user_hero(iPlayer))
 			continue;
 
@@ -326,7 +307,7 @@ stock Thunder_Explode(pEnt)
 		if(get_distance_f(vecOrigin, vecPlayer) > GRENADE_EFFECT_RADIUS)
 			continue;
 
-		Thunder_EffectStart(iPlayer);
+		Drop_EffectStart(iPlayer);
 	}
 }
 
@@ -344,7 +325,7 @@ stock bool:GiveItem_Extra(pPlayer)
 	return true;
 }
 
-stock Thunder_EffectStart(pPlayer)
+stock Drop_EffectStart(pPlayer)
 {
 	new pEnt = g_iEnt_Effect[pPlayer];
 
@@ -358,38 +339,69 @@ stock Thunder_EffectStart(pPlayer)
 		if(!g_iUserBitEffect) SwitchToggle(true);
 		SetBit(g_iUserBitEffect, pPlayer);
 	}
-	Thunder_Kill(pPlayer)
-    SetThink(pEnt, "@RG_Think_ThunderGrenade");
+
+	/* MSG_ScreenShake(pPlayer, 10.0, GRENADE_EFFECT_DURATION, 1.0) */
+
+	new Float:flGameTime = get_gametime();
+
+	set_entvar(pEnt, var_owner, pPlayer);
+	set_entvar(pEnt, var_nextthink, flGameTime);
+	set_entvar(pEnt, var_ltime, flGameTime + GRENADE_EFFECT_DURATION);
+
+	SetThink(pEnt, "@RG_Think_DropEffect");
 	return true;
 }
 
-stock Thunder_Kill(iVictim)
+@RG_Think_DropEffect(pEnt)
 {
-	new iItem = get_member(iVictim, m_pActiveItem);
+	/* new Float:flGameTime = get_gametime();
+
+	new iColorAlpha[4]; for(new i; i < 3; i++) iColorAlpha[i] = random(256);
+	iColorAlpha[3] = 120;*/
+
+	new pPlayer = get_entvar(pEnt, var_owner);
+
+	/*MSG_ScreenFade(pPlayer, GRENADE_EFFECT_THINK, GRENADE_EFFECT_THINK, 0, iColorAlpha);
+
+	new Float:vecPunch[3]; for(new i; i < 2; i++) vecPunch[i] = GRENADE_EFFECT_PUNCH; 
+
+	set_entvar(pEnt, var_punchangle, vecPunch)
+	set_entvar(pPlayer, var_punchangle, vecPunch);
+
+	if(Float:get_entvar(pEnt, var_ltime) <= flGameTime)
+	{	
+		Drop_EffectDisable(pPlayer);
+		return;
+	}
+
+	set_entvar(pEnt, var_nextthink, flGameTime + GRENADE_EFFECT_THINK); */
+
+	new iItem = get_member(pPlayer, m_pActiveItem);
 	new iSlot = rg_get_iteminfo(iItem, ItemInfo_iSlot);
 	
 	if(!is_nullent(iItem))
 	{
 		if(0 <= iSlot <= 1)
-		rg_drop_items_by_slot(iVictim, InventorySlotType:++iSlot);
+		rg_drop_items_by_slot(pPlayer, InventorySlotType:++iSlot);
 	}
 
 	new Float:vecPunch[3]; for(new i; i < 2; i++) vecPunch[i] = GRENADE_EFFECT_PUNCH; 
-	set_entvar(iVictim, var_punchangle, vecPunch);
-	Thunder_EffectDisable(iVictim)
+	set_entvar(pPlayer, var_punchangle, vecPunch);
+
+	Drop_EffectDisable(pPlayer);
 }
 
-stock Thunder_EffectDisable(iVictim)
+stock Drop_EffectDisable(pPlayer)
 {
-	if(!IsSetBit(g_iUserBitEffect, iVictim))
+	if(!IsSetBit(g_iUserBitEffect, pPlayer))
 		return;
 
-	if(!is_nullent(g_iEnt_Effect[iVictim])) 
-		rg_remove_ent(g_iEnt_Effect[iVictim]);
+	if(!is_nullent(g_iEnt_Effect[pPlayer])) 
+		rg_remove_ent(g_iEnt_Effect[pPlayer]);
 
-	g_iEnt_Effect[iVictim] = NULLENT;
+	g_iEnt_Effect[pPlayer] = NULLENT;
 
-	ClearBit(g_iUserBitEffect, iVictim);
+	ClearBit(g_iUserBitEffect, pPlayer);
 
 	if(!g_iUserBitEffect) SwitchToggle(false);
 }
