@@ -159,6 +159,11 @@ public client_putinserver(id)
 	ZPE_SetUserKnife(id, KNIFE_DEFAULT);
 }
 
+public client_connect(id)
+{
+	ZPE_SetUserKnife(id, KNIFE_DEFAULT);
+}
+
 public zp_user_humanized_post(id, survivor)
 {
 	deploy_if_knife(id)
