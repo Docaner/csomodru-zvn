@@ -240,13 +240,13 @@ public zp_extra_item_selected(iPlayer, iItemID)
 		Command__DelJanus9(iPlayer);
 } */
 
-public zp_user_humanized_post(iPlayer, survivor)
+/* public zp_user_humanized_post(iPlayer, survivor)
 {
 	if(!is_user_connected(iPlayer)) return;
 
 	if(IsUserHasJanus9(iPlayer))
 		Command__GiveJanus9(iPlayer);
-}
+} */
 
 public fw_Player_Spawn(iPlayer) 
 {

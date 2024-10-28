@@ -159,14 +159,9 @@ public client_putinserver(id)
 	ZPE_SetUserKnife(id, KNIFE_DEFAULT);
 }
 
-public client_connect(id)
-{
-	ZPE_SetUserKnife(id, KNIFE_DEFAULT);
-}
-
 public zp_user_humanized_post(id, survivor)
 {
-	deploy_if_knife(id)
+	deploy_if_knife(id);
 }
 
 public HM_KnifeDeploy_Post(iEnt)
@@ -623,6 +618,15 @@ public ZPE_SetUserKnife(id, iKnife)
 
 stock deploy_if_knife(const id)
 {
+	new iTarget = g_iMenuPosition[id];
+	new iLvl = ArrayGetCell(g_aiLvl, iTarget);
+
+	if(zpe_get_user_lvl(id) < iLvl)
+	{
+		ZPE_SetUserKnife(id, KNIFE_DEFAULT)
+		return
+	}
+
 	if(zp_get_user_zombie(id))
 		return;
 
