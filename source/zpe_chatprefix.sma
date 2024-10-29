@@ -89,12 +89,22 @@ public Hook__ClCmd_Say(id, bool:bTeam)
 		}
 	}
 	
+/* 
+Agent - s
+Premium - p
+VIP - t
+PLUS - o
+SKIN - r 
+GIRL - m
+*/
 	
 #define ADMIN_ADM ADMIN_BAN
 #define ADMIN_AGENT ADMIN_LEVEL_G
 #define ADMIN_PREMIUM ADMIN_LEVEL_D
 #define ADMIN_VIP ADMIN_LEVEL_H
 #define ADMIN_PLUS ADMIN_LEVEL_C
+
+#define ADMIN_GIRL ADMIN_LEVEL_A
 
 	new szSteamID[35]
 	get_user_authid(id, szSteamID, 33)
@@ -190,8 +200,11 @@ public Hook__ClCmd_Say(id, bool:bTeam)
 		formatex(szPriv, charsmax(szPriv), "Милая девушка <3")
 	else if(equal(szSteamID, "STEAM_1:0:860109188"))
 		formatex(szPriv, charsmax(szPriv), "Забивная <3") 
+	
 	else if(iFlags & ADMIN_ADM)
-		formatex(szPriv, charsmax(szPriv), "Админ")
+		formatex(szPriv, charsmax(szPriv), "Админ");
+	else if(iFlags & ADMIN_GIRL)
+		formatex(szPriv, charsmax(szPriv), "Милая девушка <3");
 	else if(iFlags & ADMIN_AGENT)
 	{
 		if(iFlags & ADMIN_PLUS)
