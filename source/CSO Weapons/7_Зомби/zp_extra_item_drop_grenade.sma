@@ -299,7 +299,7 @@ stock Drop_Explode(pEnt)
 
 	for(new iPlayer = 1; iPlayer <= MaxClients; iPlayer++)
 	{
-		if(!is_user_alive(iPlayer) || zp_get_user_zombie(iPlayer) || zp_get_user_hero(iPlayer))
+		if(!is_user_alive(iPlayer) || zp_get_user_zombie(iPlayer) || zp_get_user_hero(iPlayer) || zp_get_user_survivor(iPlayer))
 			continue;
 
 		get_entvar(iPlayer, var_origin, vecPlayer);
