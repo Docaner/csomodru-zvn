@@ -199,61 +199,19 @@ public plugin_precache()
 public plugin_natives()
 {
 	register_native("zp_user_has_janus9", "Command__GetJanus9", 1);
-	register_native("zp_give_user_janus9", "Command__GiveJanus9", 1);
-	register_native("zp_delete_user_janus9", "Command__DelJanus9", 1);
 }
 
 public Command__GetJanus9(iPlayer) return IsUserHasJanus9(iPlayer);
-public Command__GiveJanus9(iPlayer)
-{
-	Set_Bit(gl_iBitUserHasJanus9, iPlayer);
-
-	new iItem = get_pdata_cbase(iPlayer, m_pActiveItem, linux_diff_player);
-	if(is_user_alive(iPlayer) && get_pdata_int(iItem, m_iId, linux_diff_weapon) == CSW_KNIFE)
-	{
-		if(pev_valid(iItem) == PDATA_SAFE)
-			ExecuteHamB(Ham_Item_Deploy, iItem);
-	}
-}
-public Command__DelJanus9(iPlayer) return Reset_Bit(gl_iBitUserHasJanus9, iPlayer);
-
-/* [ Zombie Plague ] */
-public zp_extra_item_selected(iPlayer, iItemID)
-{
-	if(iItemID != g_iKnife) return PLUGIN_HANDLED;
-
-	if(IsUserHasJanus9(iPlayer))
-	{
-		client_print(iPlayer, print_center, "You have already [JANUS-IX]");
-		return ZP_PLUGIN_HANDLED;
-	}
-
-	Command__GiveJanus9(iPlayer);
-	return PLUGIN_HANDLED;
-}
-
-/* public zp_user_infected_post(iPlayer)
-{
-	if(!is_user_connected(iPlayer)) return;
-
-	if(IsUserHasJanus9(iPlayer))
-		Command__DelJanus9(iPlayer);
-} */
-
-/* public zp_user_humanized_post(iPlayer, survivor)
-{
-	if(!is_user_connected(iPlayer)) return;
-
-	if(IsUserHasJanus9(iPlayer))
-		Command__GiveJanus9(iPlayer);
-} */
 
 public fw_Player_Spawn(iPlayer) 
 {
 	if(!IsUserHasJanus9(iPlayer) || zp_get_user_zombie(iPlayer) || !is_user_alive(iPlayer)) return HAM_IGNORED;
 	
-	Command__DelJanus9(iPlayer);
-	Command__GiveJanus9(iPlayer);
+	new iItem = get_pdata_cbase(iPlayer, m_pActiveItem, linux_diff_player);
+	if(get_pdata_int(iItem, m_iId, linux_diff_weapon) != CSW_KNIFE) return HAM_IGNORED;
+	
+	setUserModel(iPlayer, iItem);
+	
 	return HAM_HANDLED;
 }
 
@@ -332,7 +290,11 @@ public CKnife__Deploy_Post(iItem)
 {
 	new iPlayer = get_pdata_cbase(iItem, m_pPlayer, linux_diff_weapon);
 	if(!IsUserHasJanus9(iPlayer) || zp_get_user_zombie(iPlayer)) return;
+	setUserModel(iPlayer, iItem);
+}
 
+stock setUserModel(iPlayer, iItem)
+{
 	set_pev(iPlayer, pev_viewmodel2, JANUS9_MODEL_VIEW);
 	set_pev(iPlayer, pev_weaponmodel2, JANUS9_MODEL_PLAYER_A);
 

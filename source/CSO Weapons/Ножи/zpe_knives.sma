@@ -588,13 +588,8 @@ public ZPE_SetUserKnife(id, iKnife)
 {
 	new iReturn = 1;
 
-	if(iKnife < 0 || iKnife >= ArraySize(g_asName) || ~get_user_flags(id) & ArrayGetCell(g_aiFlag, iKnife))
-	{
-		iKnife = KNIFE_DEFAULT;
-		iReturn = 0;
-	}
-
-	if(iKnife < 0 || iKnife >= ArraySize(g_asName) || ~zpe_get_user_lvl(id) >= ArrayGetCell(g_aiLvl, iKnife))
+	if(iKnife < 0 || iKnife >= ArraySize(g_asName) || ~get_user_flags(id) & ArrayGetCell(g_aiFlag, iKnife) ||
+		zpe_get_user_lvl(id) < ArrayGetCell(g_aiLvl, iKnife))
 	{
 		iKnife = KNIFE_DEFAULT;
 		iReturn = 0;
