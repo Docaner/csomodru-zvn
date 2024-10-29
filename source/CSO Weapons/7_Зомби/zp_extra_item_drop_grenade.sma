@@ -9,6 +9,7 @@
 #include <api_weapon_player_model>
 
 native zp_get_user_hero(iPlayer);
+native zpe_get_user_chainsaw(iPlayer);
 
 #define ITEM_NAME "DropGrenade"
 #define ITEM_COST 0
@@ -299,7 +300,7 @@ stock Drop_Explode(pEnt)
 
 	for(new iPlayer = 1; iPlayer <= MaxClients; iPlayer++)
 	{
-		if(!is_user_alive(iPlayer) || zp_get_user_zombie(iPlayer) || zp_get_user_hero(iPlayer) || zp_get_user_survivor(iPlayer))
+		if(!is_user_alive(iPlayer) || zp_get_user_zombie(iPlayer) || zp_get_user_hero(iPlayer) || zp_get_user_survivor(iPlayer) || zpe_get_user_chainsaw(iPlayer))
 			continue;
 
 		get_entvar(iPlayer, var_origin, vecPlayer);
