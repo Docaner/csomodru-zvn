@@ -9,15 +9,15 @@ public plugin_init(){
 
 public lvldown(id)
 {
-    zpe_set_user_lvl(id, 0)
+    zpe_set_user_exp(id, 0)
 }
 
 public lvlup10(id)
 {
-    zpe_set_user_lvl(id, 10)
+    zpe_set_user_exp(id, 25000)
 }
 
 public lvlup15(id)
 {
-    zpe_set_user_lvl(id, 15)
+    zpe_set_user_exp(id, 999999)
 }
