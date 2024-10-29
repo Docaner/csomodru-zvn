@@ -613,15 +613,6 @@ public ZPE_SetUserKnife(id, iKnife)
 
 stock deploy_if_knife(const id)
 {
-	new iTarget = g_iMenuPosition[id];
-	new iLvl = ArrayGetCell(g_aiLvl, iTarget);
-
-	if(zpe_get_user_lvl(id) < iLvl)
-	{
-		ZPE_SetUserKnife(id, KNIFE_DEFAULT)
-		return
-	}
-
 	if(zp_get_user_zombie(id))
 		return;
 
