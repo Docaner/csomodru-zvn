@@ -115,16 +115,17 @@ enum _: eAttackType
 
 // Slash
 #define JANUS9_SLASH_DAMAGE 150.0
-#define JANUS9_SLASH_DISTANCE 50.0
+#define JANUS9_SLASH_DISTANCE 64.0
 
 new Float: flAngles_Slash[] = { 0.0, 2.5, -2.5, 5.0, -5.0, 7.5, -7.5 };
 new Float: flAnglesUp_Slash[] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
 
 // Stab
-#define JANUS9_STAB_DAMAGE 200.0
+#define JANUS9_STAB_DAMAGE 225.0
 #define JANUS9_STAB_DISTANCE 100.0
 
 #define JANUS9_KNOCKBACK_SLASH	250.0
+#define JANUS9_KNOCKBACK_STAB	280.0
 
 new Float: flAngles_Stab[] = { 0.0, -2.5, 2.5, -5.0, 5.0, -7.5, 7.5, -10.0, 10.0, -12.5, 12.5, -15.0, 15.0, -17.5, 17.5, -20.0, 2.0 };
 new Float: flAnglesUp_Stab[] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
@@ -537,7 +538,8 @@ stock UTIL_FakeTraceAttack(iVictim, iAttacker, Float: flDamage, Float: vecDirect
 	
 	set_pdata_int(iVictim, m_LastHitGroup, iHitgroup, linux_diff_player);
 
-	if(!IsNPC(iVictim)) FakeKnockBack(iVictim, vecDirection, JANUS9_KNOCKBACK_SLASH);
+	if(!IsNPC(iVictim) && (flDamage == JANUS9_SLASH_DAMAGE)) FakeKnockBack(iVictim, vecDirection, JANUS9_KNOCKBACK_SLASH);
+	if(!IsNPC(iVictim) && (flDamage == JANUS9_STAB_DAMAGE)) FakeKnockBack(iVictim, vecDirection, JANUS9_KNOCKBACK_STAB);
 
 	switch(iHitgroup) 
 	{
