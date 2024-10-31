@@ -27,7 +27,7 @@ native zpe_get_user_chainsaw(iPlayer);
 #define GRENADE_MODEL_WORLD "models/zp_br_cso/grenade/w_jumpbomb_b2.mdl"
 #define GRENADE_MODEL_BODY 0
 
-#define GRENADE_EFFECT_RADIUS 150.0
+#define GRENADE_EFFECT_RADIUS 300.0
 #define GRENADE_EFFECT_DURATION 10.0
 //#define GRENADE_EFFECT_DMG random_float(20.0, 30.0)
 #define GRENADE_EFFECT_PUNCH random_float(-50.0, 50.0)
