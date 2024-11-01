@@ -114,14 +114,14 @@ enum _: eAttackType
 #define JANUS9_ACTIVE_TIME 3.0 // Active time for JANUS mode
 
 // Slash
-#define JANUS9_SLASH_DAMAGE 150.0
+#define JANUS9_SLASH_DAMAGE 200.0
 #define JANUS9_SLASH_DISTANCE 72.0
 
 new Float: flAngles_Slash[] = { 0.0, 2.5, -2.5, 5.0, -5.0, 7.5, -7.5 };
 new Float: flAnglesUp_Slash[] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
 
 // Stab
-#define JANUS9_STAB_DAMAGE 225.0
+#define JANUS9_STAB_DAMAGE 275.0
 #define JANUS9_STAB_DISTANCE 88.0
 
 #define JANUS9_KNOCKBACK_SLASH	250.0
