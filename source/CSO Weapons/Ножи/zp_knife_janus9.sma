@@ -115,17 +115,17 @@ enum _: eAttackType
 
 // Slash
 #define JANUS9_SLASH_DAMAGE 150.0
-#define JANUS9_SLASH_DISTANCE 68.0
+#define JANUS9_SLASH_DISTANCE 72.0
 
 new Float: flAngles_Slash[] = { 0.0, 2.5, -2.5, 5.0, -5.0, 7.5, -7.5 };
 new Float: flAnglesUp_Slash[] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
 
 // Stab
 #define JANUS9_STAB_DAMAGE 225.0
-#define JANUS9_STAB_DISTANCE 100.0
+#define JANUS9_STAB_DISTANCE 88.0
 
 #define JANUS9_KNOCKBACK_SLASH	250.0
-#define JANUS9_KNOCKBACK_STAB	350.0
+#define JANUS9_KNOCKBACK_STAB	600.0
 
 new Float: flAngles_Stab[] = { 0.0, -2.5, 2.5, -5.0, 5.0, -7.5, 7.5, -10.0, 10.0, -12.5, 12.5, -15.0, 15.0, -17.5, 17.5, -20.0, 2.0 };
 new Float: flAnglesUp_Stab[] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
