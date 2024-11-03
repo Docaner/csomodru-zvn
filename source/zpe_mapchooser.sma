@@ -42,11 +42,7 @@ new Array:g_asMap, Array:g_aiMinOnline, Array:g_aiMaxOnline, Array:g_afKnockMult
 
 new g_aLastMaps[LASTMAP_MAX], g_iLastlen, g_blastMaps = true;
 
-// new const g_szPrepareSounds[][] = {"fvox/one", "fvox/two", "fvox/three", "fvox/four", "fvox/five"};
-// new const g_szEndingSounds[][] = {"vox/one", "vox/two", "vox/three", "vox/four", "vox/five"};
-
-// new const g_szStartSounds[][] = {"gman/gman_choose1", "gman/gman_choose2", "barney/ba_bring"}
-// new const g_szEndSounds[][] = {"ambience/goal_1.wav", "scientist/alright.wav"};
+new g_iUserShuffle[33][MAP_MAX];
 
 public plugin_init()
 {
@@ -133,12 +129,6 @@ public client_disconnected(id, bool:drop, message[], maxlen)
 			g_iUserVote[id] = -1;
 		}
 	}
-
-	/*if(IsSetBit(g_iBitUserRTV, id))
-	{
-		ClearBit(g_iBitUserRTV, id);
-		g_iNumRTV--;
-	}*/
 }
 
 public Event_HLTV()
@@ -168,8 +158,6 @@ public prepare_to_vote()
 {
 	g_bIsVote = true;
 
-	//new Float:fTimeLimit = get_pcvar_float(g_pCvarTimeLimit);
-	//new Float:fRoundTime = get_pcvar_float(g_pCvarRoundTime);
 	set_pcvar_float(g_pCvarTimeLimit, 0.0);
 
 	g_fOldFreezeTime = get_pcvar_float(g_pCvarFreezeTime);
@@ -177,30 +165,12 @@ public prepare_to_vote()
 
 	set_pcvar_float(g_pCvarFreezeTime, float(TIME_TOVOTE) + 8.0);
 
-	arrayset(g_iUserVote, -1, charsmax(g_iUserVote));
-	arrayset(g_iMenuPosition, 0, charsmax(g_iMenuPosition));
+	arrayset(g_iUserVote, -1, sizeof g_iUserVote);
+	arrayset(g_iMenuPosition, 0, sizeof g_iMenuPosition);
 
 	start_vote();
-	// g_iTimes = 6;
-	// count_down_to_vote();
-	// set_task(1.0, "count_down_to_vote", TASK_COUNTDOWN, _, _, "a", g_iTimes)
 }
 
-// public count_down_to_vote()
-// {
-// 	if(--g_iTimes)
-// 	{
-// 		set_dhudmessage(50, 255, 50, -1.0, 0.25, 0, 0.0, 0.8, 0.2, 0.2);
-// 		show_dhudmessage(0, "До голосования осталось ~ %d", g_iTimes);
-// 		client_cmd(0, "spk %s", g_szPrepareSounds[g_iTimes - 1]);
-
-// 		if(g_iTimes == 4)
-// 			SCREEN_FADE(0, 4096, 1024, 1, 0, 0, 0, 255)
-// 		else if(g_iTimes < 4)
-// 			SCREEN_FADE(0, 1, 1, 4, 0, 0, 0, 255)
-// 	}
-// 	else start_vote();
-// }
 
 start_vote()
 {
@@ -248,13 +218,35 @@ start_vote()
 	for(new i; i < ArraySize(g_asMapVote); i++)
 		ArrayPushCell(g_aiVotes, 0);
 
-	// client_cmd(0, "spk %s", g_szStartSounds[random_num(0, charsmax(g_szStartSounds))]);
-
 	g_iTimes = TIME_TOVOTE + 1;
 
+	shuffleAllUsers(ArraySize(g_asMapVote));
 	top5_camera_start();
 	task_vote();
 	set_task(1.0, "task_vote", TASK_VOTE, _, _, "a", g_iTimes);
+}
+
+stock shuffleAllUsers(iSize) 
+	for(new iPlayer = 1; iPlayer <= MaxClients; iPlayer++)
+		shuffleUser(iPlayer, iSize)
+
+stock shuffleUser(iPlayer, iSize)
+{
+	arrayset(g_iUserShuffle[iPlayer], -1, sizeof g_iUserShuffle[]);
+	
+	new left = iSize, iRandom, iShuffleIndex;
+
+	for(new i; i < iSize; i++, left--, iShuffleIndex = 0)
+	{
+		iRandom = random(left);
+		
+		for(new j = 0; j <= iRandom; j++, iShuffleIndex++) 
+			if(g_iUserShuffle[iPlayer][iShuffleIndex] != -1) j--;
+
+		iShuffleIndex--;
+
+		g_iUserShuffle[iPlayer][iShuffleIndex] = i;
+	}
 }
 
 public task_vote()
@@ -356,15 +348,15 @@ Show_VoteMenu(id, iPos)
 	new iKeys = (1<<10), b, szMap[32], iVotes;
 	for(new a = iStart; a < iEnd; a++)
 	{
-		ArrayGetString(g_asMapVote, a, szMap, charsmax(szMap));
-		iVotes = ArrayGetCell(g_aiVotes, a);
+		ArrayGetString(g_asMapVote, g_iUserShuffle[id][a], szMap, charsmax(szMap));
+		iVotes = ArrayGetCell(g_aiVotes, g_iUserShuffle[id][a]);
 
 		if(g_iUserVote[id] == -1)
 		{
 			iKeys |= (1<<b);
 			iLen += formatex(szMenu[iLen], charsmax(szMenu) - iLen, "\r%d. \w%s \r[%d]^n", ++b, szMap, iVotes);
 		}
-		else iLen += formatex(szMenu[iLen], charsmax(szMenu) - iLen, "\r%d. %s%s \r[%d]^n", ++b, g_iUserVote[id] == a ? "\y" : "\d", szMap, iVotes);
+		else iLen += formatex(szMenu[iLen], charsmax(szMenu) - iLen, "\r%d. %s%s \r[%d]^n", ++b, g_iUserVote[id] == g_iUserShuffle[id][a] ? "\y" : "\d", szMap, iVotes);
 	}
 
 	if(iPagesNum > 1)
@@ -399,14 +391,15 @@ public Handle_VoteMenu(id, iKey)
 		default:
 		{			
 			new iTarget = g_iMenuPosition[id] * PLAYERS_PER_PAGE + iKey;
+			new iMap = g_iUserShuffle[id][iTarget];
+
+			g_iUserVote[id] = iMap;
 			
-			g_iUserVote[id] = iTarget;
-			
-			new iVotes = ArrayGetCell(g_aiVotes, iTarget);
-			ArraySetCell(g_aiVotes, iTarget, iVotes + 1);
+			new iVotes = ArrayGetCell(g_aiVotes, iMap);
+			ArraySetCell(g_aiVotes, iMap, iVotes + 1);
 
 			new szName[32]; get_user_name(id, szName, charsmax(szName));
-			new szMap[32]; ArrayGetString(g_asMapVote, iTarget, szMap, charsmax(szMap));
+			new szMap[32]; ArrayGetString(g_asMapVote, iMap, szMap, charsmax(szMap));
 
 			UTIL_SayText(0, "!g[ZP|MAP] !yИгрок !g%s !yпроголосовал за карту !g%s", szName, szMap);
 		}
