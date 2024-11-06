@@ -122,7 +122,7 @@ new Float: flAnglesUp_Slash[] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
 
 // Stab
 #define JANUS9_STAB_DAMAGE 315.0
-#define JANUS9_STAB_DISTANCE 88.0
+#define JANUS9_STAB_DISTANCE 90.0
 
 #define JANUS9_KNOCKBACK_SLASH	250.0
 #define JANUS9_KNOCKBACK_STAB	800.0
