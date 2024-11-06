@@ -87,10 +87,10 @@ new const g_szKnifeRef[] = "dragontail";
 #define CHARGE_DISTANCE 100.0
 
 //Charge Attack Damage
-#define CHARGE_DMG 550.0
+#define CHARGE_DMG 577.5 // 550.0
 
 //Charge Knock
-#define CHARGE_KNOCK 572.5
+#define CHARGE_KNOCK 600.0 // 572.5
 
 //Settings Fake TraceLines
 #define ATTACK_STEP 5.0 // Шаг TraceAttack
