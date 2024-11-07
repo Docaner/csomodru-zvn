@@ -90,6 +90,7 @@
 #define FLAME_RADIUS 31.0
 #define FLAME_DAMAGE random_float(200.0, 250.0)
 #define FLAME_SPRITE "sprites/eexplo.spr"
+#define FLAME_FRAMES 25.0
 
 new const iWeaponList[] = {  
 	5,  32, -1, -1, 0, 12,5,  0 // weapon_xm1014
@@ -102,7 +103,7 @@ new g_iszAllocString_ModelView,
 
 	g_iMsgID_WeaponList,
 	g_iMsgID_StatusIcon,
-	g_iSpriteFrames,
+	// g_iSpriteFrames,
 	g_iItemID
 
 public plugin_init() {
@@ -144,7 +145,7 @@ public plugin_precache() {
 	engfunc(EngFunc_PrecacheGeneric, WEAPON_HUD);
 	engfunc(EngFunc_PrecacheGeneric, WEAPON_HUD_AMMO);
 
-	g_iSpriteFrames = engfunc(EngFunc_ModelFrames, engfunc(EngFunc_PrecacheModel, FLAME_SPRITE));
+	// g_iSpriteFrames = engfunc(EngFunc_ModelFrames, engfunc(EngFunc_PrecacheModel, FLAME_SPRITE));
 	
 	g_iszAllocString_ModelView = engfunc(EngFunc_AllocString, WEAPON_MODEL_V);
 	g_iszAllocString_Entity = engfunc(EngFunc_AllocString, WEAPON_OLD);
@@ -210,7 +211,7 @@ public fw_Think(iEntity) {
 			flFrame += 0.65;
 			
 			if(flScale <= 0.7) flScale += 0.01;
-			if(flFrame > g_iSpriteFrames) { 
+			if(flFrame > FLAME_FRAMES) { 
 				set_pev(iEntity, pev_flags, FL_KILLME);
 				return FMRES_IGNORED;
 			}
@@ -218,7 +219,7 @@ public fw_Think(iEntity) {
 		else {
 			flFrame += 0.8;
 			
-			if(flFrame >= g_iSpriteFrames - 1.0) set_pev(iEntity, pev_movetype, MOVETYPE_NONE);
+			if(flFrame >= FLAME_FRAMES - 1.0) set_pev(iEntity, pev_movetype, MOVETYPE_NONE);
 			if(flScale <= 0.7) flScale += 0.05;
 		}
 
@@ -258,7 +259,7 @@ public fw_Touch(iEntity, iVictim) {
 		set_pev(iEntity, pev_solid, SOLID_NOT);
 
 		new Float: vecOrigin[3]; pev(iEntity, pev_origin, vecOrigin);
-		new iVictim; iVictim = 0;
+		new iVictim = -1
 
 		while((iVictim = engfunc(EngFunc_FindEntityInSphere, iVictim, vecOrigin, FLAME_RADIUS)) > 0) {
 			if(pev(iVictim, pev_takedamage) == DAMAGE_NO) 
