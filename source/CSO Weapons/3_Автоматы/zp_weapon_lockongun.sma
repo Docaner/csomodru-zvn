@@ -34,9 +34,9 @@ enum
 	WEAPON_ANIM_RELOAD = 4,
 	WEAPON_ANIM_DRAW = 6,
 	WEAPON_ANIM_SCOPE_ON = 8,
-	WEAPON_ANIM_ZOOM_IN,
-	WEAPON_ANIM_ZOOM_IDLE,
-	WEAPON_ANIM_ZOOM_OUT
+	WEAPON_ANIM_ZOOM_IN = 9,
+	WEAPON_ANIM_ZOOM_IDLE = 10,
+	WEAPON_ANIM_ZOOM_OUT = 11
 };
 
 enum // zoom state
@@ -724,17 +724,18 @@ public CPlayer__PreThink_Pre(iPlayer)
 
 	if(flNextRocket < flGameTime && !getMaxRockets(iItem))
 	{
-		if(getRockets(iItem) == 9 && !get_pdata_int(iItem, m_fInReload, linux_diff_weapon))
-		{
-			UTIL_SendWeaponAnim(iPlayer, WEAPON_ANIM_SCOPE_ON);
-			set_pdata_float(iItem, m_flTimeWeaponIdle, WEAPON_ANIM_ZOOM_TIME, linux_diff_weapon);
-		}
 
 		UTIL_StatusIcon(iItem, iPlayer, 0);
 		setRockets(iItem, getRockets(iItem) + 1);
 		UTIL_StatusIcon(iItem, iPlayer, 1);
 
 		set_pev(iItem, pev_new_rocket, flGameTime + ENTITY_ROCKET_NEW);
+
+		if(getRockets(iItem) == 5 && !get_pdata_int(iItem, m_fInReload, linux_diff_weapon))
+		{
+			UTIL_SendWeaponAnim(iPlayer, WEAPON_ANIM_SCOPE_ON);
+			set_pdata_float(iItem, m_flTimeWeaponIdle, WEAPON_ANIM_ZOOM_TIME, linux_diff_weapon);
+		}
 	}
 
 	return HAM_IGNORED;
