@@ -290,7 +290,14 @@ enum any: eEntitiesList {
 
 #define IsUserValid(%0)						bool: ( 0 < %0 <= MaxClients )
 #define IsUserConnected(%0)					bool: ( IsUserValid( %0 ) && BIT_VALID( gl_bitsUserConnected, BIT_PLAYER( %0 ) ) )
-#define IsCustomWeapon(%0,%1)				bool: ( get_entvar( %0, var_impulse ) == %1 )
+
+#define IsUserHasTyrantMace(%1) Get_Bit(gl_iBitUserHasTyrantMace, %1)
+
+#define Get_Bit(%1,%2) ((%1 & (1 << (%2 & 31))) ? 1 : 0)
+#define Set_Bit(%1,%2) %1 |= (1 << (%2 & 31))
+#define Reset_Bit(%1,%2) %1 &= ~(1 << (%2 & 31))
+/* #define IsCustomWeapon(%0,%1)				bool: ( get_entvar( %0, var_impulse ) == %1 ) */
+
 #define GetWeaponState(%0)					get_member( %0, m_Weapon_iWeaponState )
 #define SetWeaponState(%0,%1)				set_member( %0, m_Weapon_iWeaponState, %1 )
 #if defined WeaponListDir
@@ -304,6 +311,11 @@ enum any: eEntitiesList {
 
 #define var_next_charge						var_starttime // pWeapon
 #define var_charge_level					var_weaponanim // pWeapon
+
+new g_iKnife, gl_iBitUserHasTyrantMace
+
+native zp_register_knife(const szName[]);
+forward zp_knife_selected(id, iKnife, iOldKnife);
 
 /* ~ [ AMX Mod X ] ~ */
 public plugin_natives( )
@@ -405,6 +417,17 @@ public plugin_init( )
 
 	unregister_message( get_user_msgid( "WeaponList" ), gl_iMsgHook_WeaponList );
 #endif
+
+	g_iKnife = zp_register_knife("Tyrant Mace");
+}
+
+public zp_knife_selected(iPlayer, iNew, iOld)
+{
+	if(g_iKnife == iNew && iNew != iOld)
+		Set_Bit(gl_iBitUserHasTyrantMace, iPlayer);
+
+	if(g_iKnife == iOld && iNew != iOld)
+		Reset_Bit(gl_iBitUserHasTyrantMace, iPlayer);
 }
 
 public client_putinserver( pPlayer ) BIT_ADD( gl_bitsUserConnected, BIT_PLAYER( pPlayer ) );
@@ -458,7 +481,7 @@ public FM_Hook_UpdateClientData_Post( const pPlayer, const iSendWeapons, const C
 		return;
 
 	static pActiveItem; pActiveItem = get_member( pTarget, m_pActiveItem );
-	if ( is_nullent( pActiveItem ) || !IsCustomWeapon( pActiveItem, WeaponUnicalIndex ) )
+	if ( is_nullent( pActiveItem ) || !IsUserHasTyrantMace(pPlayer) )
 		return;
 
 	set_cd( CD_Handle, CD_flNextAttack, 2.0 );
@@ -522,7 +545,7 @@ public EV_RoundStart( )
 			return;
 
 		static pActiveItem; pActiveItem = get_member( pPlayer, m_pActiveItem );
-		if ( is_nullent( pActiveItem ) || !IsCustomWeapon( pActiveItem, WeaponUnicalIndex ) )
+		if ( is_nullent( pActiveItem ) || !IsUserHasTyrantMace(pPlayer) )
 			return;
 
 		static szViewModel[ 64 ]; get_entvar( pPlayer, var_viewmodel, szViewModel, charsmax( szViewModel ) );
@@ -536,10 +559,10 @@ public EV_RoundStart( )
 /* ~ [ HamSandwich ] ~ */
 public Ham_CWeapon_Deploy_Post( const pItem )
 {
-	if ( is_nullent( pItem ) || !IsCustomWeapon( pItem, WeaponUnicalIndex ) )
+	new pPlayer
+	if ( is_nullent( pItem ) || !IsUserHasTyrantMace(pPlayer) )
 		return;
 
-	new pPlayer;
 	if ( ( pPlayer = get_member( pItem, m_pPlayer ) ) <= 0 )
 		return;
 
@@ -570,10 +593,11 @@ public Ham_CWeapon_Deploy_Post( const pItem )
 
 public Ham_CWeapon_Holster_Post( const pItem )
 {
-	if ( is_nullent( pItem ) || !IsCustomWeapon( pItem, WeaponUnicalIndex ) )
+	new pPlayer;
+
+	if ( is_nullent( pItem ) || !IsUserHasTyrantMace(pPlayer) )
 		return;
 
-	new pPlayer;
 	if ( ( pPlayer = get_member( pItem, m_pPlayer ) ) <= 0 )
 		return;
 
@@ -596,10 +620,10 @@ public Ham_CWeapon_Holster_Post( const pItem )
 
 public Ham_CWeapon_PostFrame_Pre( const pItem )
 {
-	if ( is_nullent( pItem ) || !IsCustomWeapon( pItem, WeaponUnicalIndex ) )
+	static pPlayer; pPlayer = get_member( pItem, m_pPlayer );
+	if ( is_nullent( pItem ) || !IsUserHasTyrantMace(pPlayer) )
 		return HAM_IGNORED;
 
-	static pPlayer; pPlayer = get_member( pItem, m_pPlayer );
 	if ( pPlayer <= 0 )
 		return HAM_IGNORED;
 
@@ -736,7 +760,7 @@ public Ham_CWeapon_AddToPlayer_Post( const pItem, const pPlayer )
 	if ( is_nullent( pItem ) )
 		return;
 
-#if defined WeaponListDir
+/* #if defined WeaponListDir
 	if ( IsCustomWeapon( pItem, 0 ) )
 	{
 	#if defined _reapi_included
@@ -747,9 +771,9 @@ public Ham_CWeapon_AddToPlayer_Post( const pItem, const pPlayer )
 
 		return;
 	}
-#endif
+#endif */
 
-	if ( !IsCustomWeapon( pItem, WeaponUnicalIndex ) )
+	if ( !IsUserHasTyrantMace(pPlayer) )
 		return;
 
 	if ( get_entvar( pItem, var_owner ) <= 0 )
@@ -779,13 +803,13 @@ public Ham_CWeapon_AddToPlayer_Post( const pItem, const pPlayer )
 
 public Ham_CWeapon_WeaponIdle_Pre( const pItem )
 {
-	if ( is_nullent( pItem ) || !IsCustomWeapon( pItem, WeaponUnicalIndex ) )
+	static pPlayer; pPlayer = get_member( pItem, m_pPlayer );
+	if ( is_nullent( pItem ) || !IsUserHasTyrantMace(pPlayer) )
 		return HAM_IGNORED;
 
 	if ( Float: get_member( pItem, m_Weapon_flTimeWeaponIdle ) > 0.0 )
 		return HAM_IGNORED;
 
-	static pPlayer; pPlayer = get_member( pItem, m_pPlayer );
 	if ( pPlayer <= 0 )
 		return HAM_IGNORED;
 
@@ -797,10 +821,11 @@ public Ham_CWeapon_WeaponIdle_Pre( const pItem )
 
 public Ham_CWeapon_PrimaryAttack_Pre( const pItem )
 {
-	if ( is_nullent( pItem ) || !IsCustomWeapon( pItem, WeaponUnicalIndex ) )
+	static pPlayer; pPlayer = get_member( pItem, m_pPlayer )
+
+	if ( is_nullent( pItem ) || !IsUserHasTyrantMace(pPlayer) )
 		return HAM_IGNORED;
 
-	static pPlayer; pPlayer = get_member( pItem, m_pPlayer );
 	if ( pPlayer <= 0 )
 		return HAM_IGNORED;
 
@@ -829,10 +854,11 @@ public Ham_CWeapon_PrimaryAttack_Pre( const pItem )
 
 public Ham_CWeapon_SecondaryAttack_Pre( const pItem )
 {
-	if ( is_nullent( pItem ) || !IsCustomWeapon( pItem, WeaponUnicalIndex ) )
+	static pPlayer; pPlayer = get_member( pItem, m_pPlayer );
+
+	if ( is_nullent( pItem ) || !IsUserHasTyrantMace(pPlayer) )
 		return HAM_IGNORED;
 
-	static pPlayer; pPlayer = get_member( pItem, m_pPlayer );
 	if ( pPlayer <= 0 )
 		return HAM_IGNORED;
 
@@ -930,7 +956,7 @@ public bool: CPlayer_GetWeapon( const pPlayer )
 		return false;
 
 	new pItem = get_member( pPlayer, m_rgpPlayerItems, KNIFE_SLOT );
-	if ( is_nullent( pItem ) || !IsCustomWeapon( pItem, WeaponUnicalIndex ) )
+	if ( is_nullent( pItem ) || !IsUserHasTyrantMace(pPlayer) )
 		return false;
 
 	return true;
@@ -942,7 +968,7 @@ public bool: CPlayer_RemoveWeapon( const pPlayer )
 		return false;
 
 	new pItem = get_member( pPlayer, m_rgpPlayerItems, KNIFE_SLOT );
-	if ( is_nullent( pItem ) || !IsCustomWeapon( pItem, WeaponUnicalIndex ) )
+	if ( is_nullent( pItem ) || !IsUserHasTyrantMace(pPlayer) )
 		return false;
 
 	return is_nullent( rg_give_item( pPlayer, WeaponReference, GT_REPLACE ) ) ? false : true;
@@ -1371,7 +1397,7 @@ public CIceVictim__Think( const pEntity )
 	#endif
 
 		static pInflictor; pInflictor = get_entvar( pEntity, var_dmg_inflictor );
-		if ( is_nullent( pInflictor ) || !IsCustomWeapon( pInflictor, WeaponUnicalIndex ) )
+		if ( is_nullent( pInflictor ) )
 			pInflictor = pEntity;
 
 		set_member( pVictim, m_LastHitGroup, HIT_GENERIC );
