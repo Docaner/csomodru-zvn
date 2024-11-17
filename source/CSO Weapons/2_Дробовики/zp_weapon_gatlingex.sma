@@ -55,7 +55,7 @@ const Float: ENTITY_INFERNAL_SPEED = 100.0;
 const Float: ENTITY_INFERNAL_LIFETIME = 5.0;
 const Float: ENTITY_INFERNAL_NEXTDAMAGE = 0.2; // Delay of damage in radius of Infernal Flame
 const Float: ENTITY_INFERNAL_RADIUS = 100.0;
-const Float: ENTITY_INFERNAL_DAMAGE = 250.0; // It's damage when Infernal Flame is flying
+const Float: ENTITY_INFERNAL_DAMAGE = 175.0; // It's damage when Infernal Flame is flying
 const Float: ENTITY_INFERNAL_DAMAGE_EXP = 750.0;
 #define DMG_GRENADE (1<<24)
 const ENTITY_INFERNAL_DMGTYPE = DMG_GRENADE;
