@@ -28,7 +28,7 @@ new const WEAPON_ITEM_NAME[ ] = 		"Shooting Star";
 const WEAPON_ITEM_COST = 				0;
 
 /* ~ [ Weapon Settings ] ~ */
-new const WEAPON_REFERENCE[ ] = 		"weapon_deagle";
+new const WEAPON_REFERENCE[ ] = 		"weapon_glock18";
 new const WEAPON_NATIVE[ ] = 			"zp_give_user_shootstar";
 new const WEAPON_MODEL_VIEW[ ] = 		"models/mg/v_firecracker_fix.mdl";
 
@@ -40,9 +40,7 @@ new const WEAPON_SOUNDS[ ][ ] =
 	"weapons/firecracker_bounce3.wav", //2
 	"weapons/firecracker_draw.wav", //3
 	"weapons/firecracker_explode.wav", //4
-	"weapons/firecracker-1.wav", //5
-	"weapons/firecracker-2.wav", //6
-	"weapons/firecracker-wick.wav" //7
+	"weapons/firecracker-1.wav" //5
 }
 
 const WEAPON_SPECIAL_CODE = 			1592;
@@ -62,7 +60,7 @@ new const WEAPON_RESOURCES[ ][ ] =
 };
 new const iWeaponList[ ] = 
 {
-	8, 35, -1, -1, 1, 1, 26, 0 // weapon_deagle
+	10, 120,-1, -1, 1, 2, 17, 0 // weapon_glock18
 };
 
 /* ~ [ Entity: Grenade Missile ] ~ */
@@ -71,7 +69,7 @@ new const ENTITY_GRENADE_CLASSNAME[ ] =	"ent_shootstar_missile";
 new const ENTITY_GRENADE_MODEL[ ] =		"models/zp_br_cso/weapons2/s_grenade_m79.mdl";
 new const ENTITY_GRENADE_SPRITES[ ][ ] =
 {
-	"sprites/zp_br_cso/grenade/ef_fgrenade.spr", "sprites/laserbeam.spr"
+	"sprites/mg/ef_firecracker.spr", "sprites/laserbeam.spr"
 };
 const Float: ENTITY_GRENADE_SPEED = 	1300.0; // Max 2000.0
 const Float: ENTITY_GRENADE_RADIUS =	150.75;
@@ -87,8 +85,7 @@ enum _: eWeaponAnim
 };
 
 #define WEAPON_ANIM_IDLE_TIME 			51/16.0 //
-#define WEAPON_ANIM_SHOOT_TIME 			10/30.0
-#define WEAPON_ANIM_RELOAD_TIME 		75/30.0
+#define WEAPON_ANIM_SHOOT_TIME 			85/30.0
 #define WEAPON_ANIM_DRAW_TIME 			31/30.0 //
 
 /* ~ [ Params ] ~ */
@@ -144,7 +141,9 @@ public plugin_init( )
 	RegisterHam( Ham_Item_AddToPlayer, WEAPON_REFERENCE, "CWeapon__AddToPlayer_Post", true );
 	RegisterHam( Ham_Weapon_Reload, WEAPON_REFERENCE, "CWeapon__Reload_Pre", false );
 	RegisterHam( Ham_Weapon_WeaponIdle, WEAPON_REFERENCE, "CWeapon__WeaponIdle_Pre", false );
+
 	RegisterHam( Ham_Weapon_PrimaryAttack, WEAPON_REFERENCE, "CWeapon__PrimaryAttack_Pre", false );
+	RegisterHam( Ham_Weapon_SecondaryAttack, WEAPON_REFERENCE, "CWeapon__SecondaryAttack_Pre", false );
 
 	/* -> Ham: Entity -> */
 	RegisterHam( Ham_Touch, ENTITY_GRENADE_REFERENCE, "CGrenade__Touch_Pre", false );
@@ -338,8 +337,8 @@ public CWeapon__Reload_Pre( const pItem )
 	/* UTIL_SendWeaponAnim( MSG_ONE, pPlayer, WEAPON_ANIM_SHOOT ); */
 
 	set_pdata_int( pItem, m_Weapon_fInReload, true, linux_diff_weapon );
-	set_pdata_float( pItem, m_Weapon_flTimeWeaponIdle, WEAPON_ANIM_RELOAD_TIME, linux_diff_weapon );
-	set_pdata_float( pPlayer, m_flNextAttack, WEAPON_ANIM_RELOAD_TIME, linux_diff_player );
+	set_pdata_float( pItem, m_Weapon_flTimeWeaponIdle, 0.0, linux_diff_weapon );
+	set_pdata_float( pPlayer, m_flNextAttack, 0.0, linux_diff_player );
 
 	return HAM_SUPERCEDE;
 }
@@ -376,15 +375,48 @@ public CWeapon__PrimaryAttack_Pre( const pItem )
 	CGrenade__SpawnEntity( pPlayer, pItem );
 
 	UTIL_SendWeaponAnim( MSG_ONE, pPlayer, WEAPON_ANIM_SHOOT );
-	emit_sound( pPlayer, CHAN_WEAPON, WEAPON_SOUNDS[ random_num(5,6) ], VOL_NORM, ATTN_NORM, 0, PITCH_NORM );
+	emit_sound( pPlayer, CHAN_WEAPON, WEAPON_SOUNDS[ 5 ], VOL_NORM, ATTN_NORM, 0, PITCH_NORM );
 
 	new Float: vecPunchangle[ 3 ]; pev( pPlayer, pev_punchangle, vecPunchangle );
 	vecPunchangle[ 0 ] -= ( pev( pPlayer, pev_flags ) & FL_ONGROUND ) ? random_float( 3.0, 5.0 ) : random_float( 7.0, 10.0 );
 	set_pev( pPlayer, pev_punchangle, vecPunchangle );
 
 	SetWeaponClip( pItem, --iClip );
-	set_pdata_float( pItem, m_Weapon_flNextPrimaryAttack, WEAPON_RATE, linux_diff_weapon );
-	set_pdata_float( pItem, m_Weapon_flNextSecondaryAttack, WEAPON_RATE, linux_diff_weapon );
+	set_pdata_float( pItem, m_Weapon_flNextPrimaryAttack, WEAPON_ANIM_SHOOT_TIME, linux_diff_weapon );
+	set_pdata_float( pItem, m_Weapon_flNextSecondaryAttack, WEAPON_ANIM_SHOOT_TIME, linux_diff_weapon );
+	set_pdata_float( pItem, m_Weapon_flTimeWeaponIdle, WEAPON_ANIM_SHOOT_TIME, linux_diff_weapon );
+
+	return HAM_SUPERCEDE;
+}
+
+public CWeapon__SecondaryAttack_Pre( const pItem )
+{
+	if ( !IsValidEntity( pItem ) || !IsCustomItem( pItem ) )
+		return HAM_IGNORED;
+
+	new iClip = GetWeaponClip( pItem );
+	if ( !iClip )
+	{
+		ExecuteHam( Ham_Weapon_PlayEmptySound, pItem );
+		set_pdata_float( pItem, m_Weapon_flNextSecondaryAttack, 0.2, linux_diff_weapon );
+
+		return HAM_SUPERCEDE;
+	}
+
+	new pPlayer = get_pdata_cbase( pItem, m_pPlayer, linux_diff_weapon );
+
+	CGrenade__SpawnEntity( pPlayer, pItem );
+
+	UTIL_SendWeaponAnim( MSG_ONE, pPlayer, WEAPON_ANIM_SHOOT );
+	emit_sound( pPlayer, CHAN_WEAPON, WEAPON_SOUNDS[ 5 ], VOL_NORM, ATTN_NORM, 0, PITCH_NORM );
+
+	new Float: vecPunchangle[ 3 ]; pev( pPlayer, pev_punchangle, vecPunchangle );
+	vecPunchangle[ 0 ] -= ( pev( pPlayer, pev_flags ) & FL_ONGROUND ) ? random_float( 3.0, 5.0 ) : random_float( 7.0, 10.0 );
+	set_pev( pPlayer, pev_punchangle, vecPunchangle );
+
+	SetWeaponClip( pItem, --iClip );
+	set_pdata_float( pItem, m_Weapon_flNextPrimaryAttack, WEAPON_ANIM_SHOOT_TIME, linux_diff_weapon );
+	set_pdata_float( pItem, m_Weapon_flNextSecondaryAttack, WEAPON_ANIM_SHOOT_TIME, linux_diff_weapon );
 	set_pdata_float( pItem, m_Weapon_flTimeWeaponIdle, WEAPON_ANIM_SHOOT_TIME, linux_diff_weapon );
 
 	return HAM_SUPERCEDE;
@@ -411,7 +443,9 @@ public CGrenade__Touch_Pre( const pEntity, const pTouch )
 	}
 
 	message_begin_f( MSG_PVS, SVC_TEMPENTITY, vecOrigin );
-	UTIL_TE_EXPLOSION( gl_iszModelIndex[ eModelIndex_Explode ], vecOrigin, 10.0, random_num( 16, 20 ), 32, TE_EXPLFLAG_NODLIGHTS|TE_EXPLFLAG_NOPARTICLES );
+	UTIL_TE_EXPLOSION( gl_iszModelIndex[ eModelIndex_Explode ], vecOrigin, 10.0, random_num( 16, 20 ), 32 );
+	
+	emit_sound( pEntity, CHAN_ITEM,  WEAPON_SOUNDS[ 4 ], VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 
 	message_begin_f( MSG_PVS, SVC_TEMPENTITY, vecOrigin );
 	UTIL_TE_WORLDDECAL( "{scorch1", vecOrigin );
@@ -438,7 +472,7 @@ public CGrenade__Touch_Pre( const pEntity, const pTouch )
 					continue;
 			}
 
-			if ( is_user_alive( pVictim ) && zp_get_user_zombie( pVictim ) )
+			if ( is_user_alive( pVictim ) && zp_get_user_zombie( pVictim )  )
 			{
 				set_pev( pVictim, pev_punchangle, Float: { 10.0, 10.0, 10.0 } );
 				set_pdata_float( pVictim, m_flPainShock, 1.0, linux_diff_player );
