@@ -76,6 +76,8 @@ const Float: ENTITY_GRENADE_RADIUS =	150.75;
 const Float: ENTITY_GRENADE_DAMAGE =	750.0;
 const ENTITY_GRENADE_DMGTYPE =			DMG_GRENADE;
 
+const ENTITY_GRENADE_TOUCH =			5;	
+
 /* ~ [ Weapon Animations ] ~ */
 enum _: eWeaponAnim
 {
@@ -372,7 +374,7 @@ public CWeapon__PrimaryAttack_Pre( const pItem )
 
 	new pPlayer = get_pdata_cbase( pItem, m_pPlayer, linux_diff_weapon );
 
-	CGrenade__SpawnEntity( pPlayer, pItem );
+	CGrenade__SpawnEntity_toss( pPlayer, pItem );
 
 	UTIL_SendWeaponAnim( MSG_ONE, pPlayer, WEAPON_ANIM_SHOOT );
 	emit_sound( pPlayer, CHAN_WEAPON, WEAPON_SOUNDS[ 5 ], VOL_NORM, ATTN_NORM, 0, PITCH_NORM );
@@ -405,7 +407,7 @@ public CWeapon__SecondaryAttack_Pre( const pItem )
 
 	new pPlayer = get_pdata_cbase( pItem, m_pPlayer, linux_diff_weapon );
 
-	CGrenade__SpawnEntity( pPlayer, pItem );
+	CGrenade__SpawnEntity_bounce( pPlayer, pItem );
 
 	UTIL_SendWeaponAnim( MSG_ONE, pPlayer, WEAPON_ANIM_SHOOT );
 	emit_sound( pPlayer, CHAN_WEAPON, WEAPON_SOUNDS[ 5 ], VOL_NORM, ATTN_NORM, 0, PITCH_NORM );
@@ -424,6 +426,10 @@ public CWeapon__SecondaryAttack_Pre( const pItem )
 
 public CGrenade__Touch_Pre( const pEntity, const pTouch )
 {
+	new iTouch;
+
+	emit_sound( pEntity, CHAN_ITEM,  WEAPON_SOUNDS[ random_num(0,2) ], VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+
 	if ( !IsValidEntity( pEntity ) || pev( pEntity, pev_classname ) != gl_iszAllocString_Grenade )
 		return HAM_IGNORED;
 
@@ -440,6 +446,17 @@ public CGrenade__Touch_Pre( const pEntity, const pTouch )
 	{
 		UTIL_KillEntity( pEntity );
 		return HAM_IGNORED;
+	}
+
+	iTouch = pev(pEntity, pev_iuser1) + 1;
+	set_pev(pEntity, pev_iuser1, iTouch);
+
+	if(pev( pEntity, pev_movetype) == MOVETYPE_BOUNCE)
+	{
+		if(iTouch < ENTITY_GRENADE_TOUCH)
+		{
+			return HAM_IGNORED;
+		}
 	}
 
 	message_begin_f( MSG_PVS, SVC_TEMPENTITY, vecOrigin );
@@ -472,7 +489,7 @@ public CGrenade__Touch_Pre( const pEntity, const pTouch )
 					continue;
 			}
 
-			if ( is_user_alive( pVictim ) && zp_get_user_zombie( pVictim )  )
+			if ( is_user_alive( pVictim ) && zp_get_user_zombie( pVictim ))
 			{
 				set_pev( pVictim, pev_punchangle, Float: { 10.0, 10.0, 10.0 } );
 				set_pdata_float( pVictim, m_flPainShock, 1.0, linux_diff_player );
@@ -491,7 +508,7 @@ public CGrenade__Touch_Pre( const pEntity, const pTouch )
 }
 
 /* ~ [ Other ] ~ */
-public CGrenade__SpawnEntity( const pPlayer, const pItem )
+public CGrenade__SpawnEntity_toss( const pPlayer, const pItem )
 {
 	static pEntity, iszAllocStringCached;
 	if ( iszAllocStringCached || ( iszAllocStringCached = engfunc( EngFunc_AllocString, ENTITY_GRENADE_REFERENCE ) ) )
@@ -516,6 +533,57 @@ public CGrenade__SpawnEntity( const pPlayer, const pItem )
 
 	set_pev_string( pEntity, pev_classname, gl_iszAllocString_Grenade );
 	set_pev( pEntity, pev_movetype, MOVETYPE_TOSS );
+	set_pev( pEntity, pev_solid, SOLID_TRIGGER );
+	set_pev( pEntity, pev_owner, pPlayer );
+	set_pev( pEntity, pev_dmg_inflictor, pItem );
+	set_pev( pEntity, pev_velocity, vecVelocity );
+	set_pev( pEntity, pev_gravity, 1.0 );
+	set_pev( pEntity, pev_angles, vecAngles );
+
+	engfunc( EngFunc_SetModel, pEntity, ENTITY_GRENADE_MODEL );
+	engfunc( EngFunc_SetOrigin, pEntity, vecOrigin );
+
+	// https://github.com/baso88/SC_AngelScript/wiki/TE_BEAMFOLLOW
+	message_begin( MSG_BROADCAST, SVC_TEMPENTITY );
+	write_byte( TE_BEAMFOLLOW );
+	write_short( pEntity );
+	write_short( gl_iszModelIndex[ eModelIndex_Trail ] ); // Model Index
+	write_byte( 7 ); // Life
+	write_byte( 5 ); // Width
+	write_byte( 180 ); // Red
+	write_byte( 180 ); // Green
+	write_byte( 180 ); // Blue
+	write_byte( 220 ); // Alpha
+	message_end( );
+
+	return pEntity;
+} 
+
+public CGrenade__SpawnEntity_bounce( const pPlayer, const pItem )
+{
+	static pEntity, iszAllocStringCached;
+	if ( iszAllocStringCached || ( iszAllocStringCached = engfunc( EngFunc_AllocString, ENTITY_GRENADE_REFERENCE ) ) )
+		pEntity = engfunc( EngFunc_CreateNamedEntity, iszAllocStringCached );
+
+	if ( !IsValidEntity( pEntity ) )
+		return false;
+
+	new Float: vecOrigin[ 3 ]; pev( pPlayer, pev_origin, vecOrigin );
+	new Float: vecViewOfs[ 3 ]; pev( pPlayer, pev_view_ofs, vecViewOfs );
+	new Float: vecViewAngle[ 3 ]; pev( pPlayer, pev_v_angle, vecViewAngle );
+	new Float: vecForward[ 3 ]; angle_vector( vecViewAngle, ANGLEVECTOR_FORWARD, vecForward );
+	new Float: vecVelocity[ 3 ]; xs_vec_copy( vecForward, vecVelocity );
+	new Float: vecAngles[ 3 ];
+
+	xs_vec_mul_scalar( vecForward, 10.0, vecForward );
+	xs_vec_add( vecViewOfs, vecForward, vecViewOfs );
+	xs_vec_add( vecOrigin, vecViewOfs, vecOrigin );
+
+	xs_vec_mul_scalar( vecVelocity, ENTITY_GRENADE_SPEED, vecVelocity );
+	engfunc( EngFunc_VecToAngles, vecVelocity, vecAngles );
+
+	set_pev_string( pEntity, pev_classname, gl_iszAllocString_Grenade );
+	set_pev( pEntity, pev_movetype, MOVETYPE_BOUNCE );
 	set_pev( pEntity, pev_solid, SOLID_TRIGGER );
 	set_pev( pEntity, pev_owner, pPlayer );
 	set_pev( pEntity, pev_dmg_inflictor, pItem );
