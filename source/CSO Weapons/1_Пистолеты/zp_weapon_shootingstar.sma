@@ -51,12 +51,12 @@ const WEAPON_DEFAULT_AMMO = 			35;
 const Float: WEAPON_RATE = 				0.7;
 
 /* ~ [ Weapon List ] ~ */
-new const WEAPON_WEAPONLIST[ ] = 	"zp_br_cso/weapon_firecracker";
+new const WEAPON_WEAPONLIST[ ] = 	"zp_br_cso/weapons4/weapon_firecracker";
 new const WEAPON_RESOURCES[ ][ ] =
 {
 	// Custom resources precache, sprites for example
-	"sprites/zp_br_cso/weapons2/hud2/ammo1.spr",
-	"sprites/zp_br_cso/weapons2/hud2/640hud42.spr"
+	"sprites/zp_br_cso/weapons4/hud/ammo1.spr",
+	"sprites/zp_br_cso/weapons4/hud/640hud72.spr"
 };
 new const iWeaponList[ ] = 
 {
@@ -428,8 +428,6 @@ public CGrenade__Touch_Pre( const pEntity, const pTouch )
 {
 	new iTouch;
 
-	emit_sound( pEntity, CHAN_ITEM,  WEAPON_SOUNDS[ random_num(0,2) ], VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
-
 	if ( !IsValidEntity( pEntity ) || pev( pEntity, pev_classname ) != gl_iszAllocString_Grenade )
 		return HAM_IGNORED;
 
@@ -455,6 +453,7 @@ public CGrenade__Touch_Pre( const pEntity, const pTouch )
 	{
 		if(iTouch < ENTITY_GRENADE_TOUCH)
 		{
+			emit_sound( pEntity, CHAN_ITEM,  WEAPON_SOUNDS[ random_num(0,2) ], VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 			return HAM_IGNORED;
 		}
 	}
