@@ -453,7 +453,7 @@ public CGrenade__Touch_Pre( const pEntity, const pTouch )
 	{
 		if(iTouch < ENTITY_GRENADE_TOUCH)
 		{
-			emit_sound( pEntity, CHAN_ITEM,  WEAPON_SOUNDS[ random_num(0,2) ], VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+			emit_sound( pEntity, CHAN_ITEM,  WEAPON_SOUNDS[ random_num(0,2) ], 0.5, ATTN_NORM, 0, PITCH_NORM);
 			return HAM_IGNORED;
 		}
 	}
