@@ -116,6 +116,14 @@ new g_bitIsConnected;
 
 #define IsValidPev(%0) 			(pev_valid(%0) == 2)
 
+#define CROW9_ANIM_DRAW 	41/30.0 //1,36
+#define CROW9_ANIM_IDLE		151/30.0 //5,03
+#define CROW9_ANIM_MODESTART 31/30.0 //1,03
+#define CROW9_ANIM_MODE1	38/30.0 //1,26
+#define CROW9_ANIM_MODE2	48/30.0 //1,6
+#define CROW9_ANIM_SLASH_A	41/30.0	//1,36
+#define CROW9_ANIM_SLASH_B	41/30.0	//1,36
+
 #define EXP_CLASSNAME			"CrowWind"
 
 new iBlood[2];
@@ -165,7 +173,9 @@ Weapon_OnHolster(const iItem, const iPlayer)
 	#pragma unused iItem, iPlayer
 
 	set_pev(iItem, pev_iuser1, 0);
+	set_pev(iItem, pev_iuser2, 0);
 	set_pev(iItem, pev_fuser1, 0.0);
+	set_pev(iItem, pev_fuser2, 0.0);
 }
 
 Weapon_OnIdle(const iItem, const iPlayer)
@@ -179,19 +189,23 @@ Weapon_OnIdle(const iItem, const iPlayer)
 		return
 	}
 	
-	static Float:iState;pev(iItem, pev_fuser1, iState);
+	static Float:fStateMax;pev(iItem, pev_fuser1, fStateMax);
+	static Float:fStateMin;pev(iItem, pev_fuser2, fStateMin);
 	static iState2;pev(iItem, pev_iuser1, iState2);
+	static iClick;pev(iItem, pev_iuser2, iState2);
 	
-	if (iState && !iState2 && iState <= get_gametime())
+	if (fStateMax && fStateMin && !iClick && !iState2 && fStateMax <= get_gametime())
 	{
 		Weapon_SendAnim(iPlayer, ANIM_MODE_END);
 					
-		set_pdata_float(iItem, m_flTimeWeaponIdle, 1.5, extra_offset_weapon);
-		set_pdata_float(iItem, m_flNextPrimaryAttack, 2.0, extra_offset_weapon);
-		set_pdata_float(iItem, m_flNextSecondaryAttack, 2.0, extra_offset_weapon);
+		set_pdata_float(iItem, m_flTimeWeaponIdle, CROW9_ANIM_MODE2, extra_offset_weapon);
+		set_pdata_float(iItem, m_flNextPrimaryAttack, CROW9_ANIM_MODE2, extra_offset_weapon);
+		set_pdata_float(iItem, m_flNextSecondaryAttack, CROW9_ANIM_MODE2, extra_offset_weapon);
 		
 		set_pev(iItem, pev_iuser1, 0);
+		set_pev(iItem, pev_iuser2, 0);
 		set_pev(iItem, pev_fuser1, 0.0);
+		set_pev(iItem, pev_fuser2, 0.0);
 	}
 
 	if (get_pdata_int(iItem, m_flTimeWeaponIdle, extra_offset_weapon) > 0.0)
@@ -202,7 +216,9 @@ Weapon_OnIdle(const iItem, const iPlayer)
 	if (pev(iItem, pev_iuser1))
 	{
 		set_pev(iItem, pev_iuser1, 0);
+		set_pev(iItem, pev_iuser2, 0);
 		set_pev(iItem, pev_fuser1, 0.0);
+		set_pev(iItem, pev_fuser2, 0.0);
 	}
 	
 	Weapon_SendAnim(iPlayer, ANIM_IDLE);	
@@ -255,21 +271,32 @@ public Weapon_OnSecondaryAttack(const iItem, const iPlayer)
 {
 	#pragma unused iItem, iPlayer
 	
-	if (!pev(iItem, pev_iuser1) && pev(iItem, pev_fuser1))
+	/* if (!pev(iItem, pev_iuser1) && pev(iItem, pev_fuser1) && pev(iItem, pev_fuser2))
 	{
 		set_pev(iItem, pev_iuser1, 1);
 		return;
-	}
+	} */
+	set_pev(iItem, pev_iuser1, 1);
 
-	Weapon_SendAnim(iPlayer, ANIM_MODE_START);
-		
-	set_pdata_float(iItem, m_flTimeWeaponIdle, 0.92, extra_offset_weapon);
-	set_pdata_float(iItem, m_flNextPrimaryAttack, 1.0, extra_offset_weapon);
-	set_pdata_float(iItem, m_flNextSecondaryAttack, 0.9, extra_offset_weapon);
-	
-	engfunc(EngFunc_EmitSound, iPlayer, CHAN_WEAPON, SOUND_SLASH2, 1.0, ATTN_NORM, 0, PITCH_NORM);
-	
-	set_pev(iItem, pev_fuser1, get_gametime() + 0.9);
+	if (pev(iItem, pev_iuser1) && !pev(iItem, pev_iuser2) && !pev(iItem, pev_fuser1) && !pev(iItem, pev_fuser2))
+	{
+		Weapon_SendAnim(iPlayer, ANIM_MODE_START);
+
+		set_pdata_float(iItem, m_flTimeWeaponIdle, CROW9_ANIM_MODESTART, extra_offset_weapon);
+		set_pdata_float(iItem, m_flNextPrimaryAttack, CROW9_ANIM_MODESTART, extra_offset_weapon);
+		set_pdata_float(iItem, m_flNextSecondaryAttack, 0.3, extra_offset_weapon);
+
+		engfunc(EngFunc_EmitSound, iPlayer, CHAN_WEAPON, SOUND_SLASH2, 1.0, ATTN_NORM, 0, PITCH_NORM);
+
+		set_pev(iItem, pev_fuser1, get_gametime() + 0.93);
+		set_pev(iItem, pev_fuser2, get_gametime() + 0.84);
+
+		Weapon_CheckStatus(iItem)
+	} else if (pev(iItem, pev_iuser1) && !pev(iItem, pev_iuser2) && pev(iItem, pev_fuser1) && pev(iItem, pev_fuser2))
+	{
+		set_pev(iItem, pev_iuser2, 1)
+		Weapon_CheckStatus(iItem)
+	}
 }
 
 //*           Don't modify the code below this line unless            *
@@ -300,7 +327,7 @@ public plugin_init()
 	RegisterHam(Ham_Weapon_PrimaryAttack,		WEAPON_REFERANCE, 	"HamHook_Item_PrimaryAttack",		false);
 	RegisterHam(Ham_Weapon_SecondaryAttack, 	WEAPON_REFERANCE, 	"HamHook_Item_SecondaryAttack",		false);
 
-	RegisterHam(Ham_Item_PostFrame,			WEAPON_REFERANCE, 	"HamHook_Item_PostFrame",		false);
+	/* RegisterHam(Ham_Item_PostFrame,			WEAPON_REFERANCE, 	"HamHook_Item_PostFrame",		false); */
 	
 	RegisterHam(Ham_Spawn, 				"player",		"HamHook_Player_Spawn",  		true);
 
@@ -453,8 +480,7 @@ public HamHook_Item_SecondaryAttack(const iItem)
 	_call.SecondaryAttack(iItem, iPlayer);
 	return HAM_SUPERCEDE;
 }
-
-public HamHook_Item_PostFrame(const iItem)
+public Weapon_CheckStatus(const iItem)
 {
 	static iPlayer;
 
@@ -467,21 +493,25 @@ public HamHook_Item_PostFrame(const iItem)
 		return HAM_IGNORED;
 	}
 	
-	static Float:iState;pev(iItem, pev_fuser1, iState);
+	static Float:fStateMax;pev(iItem, pev_fuser1, fStateMax);
+	static Float:fStateMin;pev(iItem, pev_fuser2, fStateMin);
 	static iState2;pev(iItem, pev_iuser1, iState2);
+	static iClick;pev(iItem, pev_iuser2, iClick);
 
-	if (iState2 && iState <= get_gametime())
+	if (iState2 && iClick && fStateMax >= get_gametime() && fStateMin <= get_gametime())
 	{
 		Weapon_SendAnim(iPlayer, ANIM_MODE_SLASH);
 					
-		set_pdata_float(iItem, m_flTimeWeaponIdle, 1.7, extra_offset_weapon);
-		set_pdata_float(iItem, m_flNextPrimaryAttack, 2.0, extra_offset_weapon);
-		set_pdata_float(iItem, m_flNextSecondaryAttack, 2.0, extra_offset_weapon);
+		set_pdata_float(iItem, m_flTimeWeaponIdle, CROW9_ANIM_MODE1, extra_offset_weapon);
+		set_pdata_float(iItem, m_flNextPrimaryAttack, CROW9_ANIM_MODE1, extra_offset_weapon);
+		set_pdata_float(iItem, m_flNextSecondaryAttack, CROW9_ANIM_MODE1, extra_offset_weapon);
 		
 		engfunc(EngFunc_EmitSound, iPlayer, CHAN_WEAPON, SOUND_SLASH3, 1.0, ATTN_NORM, 0, PITCH_NORM);
 		
 		set_pev(iItem, pev_iuser1, 0);
+		set_pev(iItem, pev_iuser2, 0);
 		set_pev(iItem, pev_fuser1, 0.0);
+		set_pev(iItem, pev_fuser2, 0.0);
 		
 		static pEntity;
 		static Float:Origin[3], Float:iAngle[3];Weapon_GetGunPosition(iPlayer, Origin, iAngle, .add_forward = 20.0, .add_right = 0.0, .add_up = 0.0)
@@ -540,10 +570,27 @@ public HamHook_Item_PostFrame(const iItem)
 			}
 		}
 		Player_SetAnimation(iPlayer, szAnimation);
+	} else if (iState2 && iClick && fStateMin > get_gametime())
+	{	
+		set_pdata_float(iItem, m_flTimeWeaponIdle, CROW9_ANIM_MODE2, extra_offset_weapon);
+		set_pdata_float(iItem, m_flNextPrimaryAttack, CROW9_ANIM_MODE2, extra_offset_weapon);
+		set_pdata_float(iItem, m_flNextSecondaryAttack, CROW9_ANIM_MODE2, extra_offset_weapon);
+		
+		Weapon_SendAnim(iPlayer, ANIM_MODE_END);
+
+		set_pev(iItem, pev_iuser1, 0);
+		set_pev(iItem, pev_iuser2, 0);
+		set_pev(iItem, pev_fuser1, 0.0);
+		set_pev(iItem, pev_fuser2, 0.0);
+
 	}
 		
 	return HAM_IGNORED;
 }
+/* public HamHook_Item_PostFrame(const iItem)
+{
+	
+} */
 
 public HamHook_Player_Spawn(iPlayer)
 {
