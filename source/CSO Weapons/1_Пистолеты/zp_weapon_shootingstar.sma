@@ -36,11 +36,8 @@ new const WEAPON_MODEL_WORLD[ ] = 		"models/mg/w_firecracker_fix.mdl";
 new const WEAPON_SOUNDS[ ][ ] =
 {
 	"weapons/firecracker_bounce1.wav", //0
-	"weapons/firecracker_bounce2.wav", //1
-	"weapons/firecracker_bounce3.wav", //2
-	"weapons/firecracker_draw.wav", //3
-	"weapons/firecracker_explode.wav", //4
-	"weapons/firecracker-1.wav" //5
+	"weapons/firecracker_explode.wav", //1
+	"weapons/firecracker-1.wav" //2
 }
 
 const WEAPON_SPECIAL_CODE = 			1592;
@@ -377,7 +374,7 @@ public CWeapon__PrimaryAttack_Pre( const pItem )
 	CGrenade__SpawnEntity_toss( pPlayer, pItem );
 
 	UTIL_SendWeaponAnim( MSG_ONE, pPlayer, WEAPON_ANIM_SHOOT );
-	emit_sound( pPlayer, CHAN_WEAPON, WEAPON_SOUNDS[ 5 ], VOL_NORM, ATTN_NORM, 0, PITCH_NORM );
+	emit_sound( pPlayer, CHAN_WEAPON, WEAPON_SOUNDS[ 2 ], VOL_NORM, ATTN_NORM, 0, PITCH_NORM );
 
 	new Float: vecPunchangle[ 3 ]; pev( pPlayer, pev_punchangle, vecPunchangle );
 	vecPunchangle[ 0 ] -= ( pev( pPlayer, pev_flags ) & FL_ONGROUND ) ? random_float( 3.0, 5.0 ) : random_float( 7.0, 10.0 );
@@ -410,7 +407,7 @@ public CWeapon__SecondaryAttack_Pre( const pItem )
 	CGrenade__SpawnEntity_bounce( pPlayer, pItem );
 
 	UTIL_SendWeaponAnim( MSG_ONE, pPlayer, WEAPON_ANIM_SHOOT );
-	emit_sound( pPlayer, CHAN_WEAPON, WEAPON_SOUNDS[ 5 ], VOL_NORM, ATTN_NORM, 0, PITCH_NORM );
+	emit_sound( pPlayer, CHAN_WEAPON, WEAPON_SOUNDS[ 2 ], VOL_NORM, ATTN_NORM, 0, PITCH_NORM );
 
 	new Float: vecPunchangle[ 3 ]; pev( pPlayer, pev_punchangle, vecPunchangle );
 	vecPunchangle[ 0 ] -= ( pev( pPlayer, pev_flags ) & FL_ONGROUND ) ? random_float( 3.0, 5.0 ) : random_float( 7.0, 10.0 );
@@ -453,7 +450,7 @@ public CGrenade__Touch_Pre( const pEntity, const pTouch )
 	{
 		if(iTouch < ENTITY_GRENADE_TOUCH)
 		{
-			emit_sound( pEntity, CHAN_ITEM,  WEAPON_SOUNDS[ random_num(0,2) ], 0.5, ATTN_NORM, 0, PITCH_NORM);
+			emit_sound( pEntity, CHAN_ITEM,  WEAPON_SOUNDS[ 0 ], 0.5, ATTN_NORM, 0, PITCH_NORM);
 			return HAM_IGNORED;
 		}
 	}
@@ -461,7 +458,7 @@ public CGrenade__Touch_Pre( const pEntity, const pTouch )
 	message_begin_f( MSG_PVS, SVC_TEMPENTITY, vecOrigin );
 	UTIL_TE_EXPLOSION( gl_iszModelIndex[ eModelIndex_Explode ], vecOrigin, 10.0, random_num( 16, 20 ), 32 );
 	
-	emit_sound( pEntity, CHAN_ITEM,  WEAPON_SOUNDS[ 4 ], VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+	emit_sound( pEntity, CHAN_ITEM,  WEAPON_SOUNDS[ 1 ], VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 
 	message_begin_f( MSG_PVS, SVC_TEMPENTITY, vecOrigin );
 	UTIL_TE_WORLDDECAL( "{scorch1", vecOrigin );
