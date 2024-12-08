@@ -8,15 +8,15 @@
 native zp_get_user_hero(id)
 #endif
 
-new const g_szModelHero[] = "br_humans_hw24" // Модель героя;
+new const g_szModelHero[] = "br_humans_ny25" // Модель героя;
 #define BODY_HERO_PLAYER 18 // Боди героя
-#define BODY_HERO_HAT 1110 // Боди героя с шапкой
+#define BODY_HERO_HAT 918 // Боди героя с шапкой
 
 #define SKIN_DEF_MAX 5 // До какого пункта в меню идут бесплатные скины
 #define SKIN_DEF random(SKIN_DEF_MAX) // Установка стандартного скина
 
 
-new const g_szModelSurvivor[] = "br_humans_hw24" // Модель выжившего
+new const g_szModelSurvivor[] = "br_humans_ny25" // Модель выжившего
 #define BODY_SURVIVOR_PLAYER 20 // Боди выжившего
 
 //Женские Die-звуки
