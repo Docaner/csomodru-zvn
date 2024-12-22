@@ -16,7 +16,7 @@ new const PluginAuthor[ ] =						"Yoshioka Haruki";
  * 
  * Download link: https://github.com/YoshiokaHaruki/AMXX-API-Weapon-Player-Model/releases
  */
-#tryinclude <api_weapon_player_model>
+//#tryinclude <api_weapon_player_model>
 
 #if !defined _reapi_included
 	#include <non_reapi_support>
@@ -291,7 +291,7 @@ enum any: eEntitiesList {
 #define IsUserValid(%0)						bool: ( 0 < %0 <= MaxClients )
 #define IsUserConnected(%0)					bool: ( IsUserValid( %0 ) && BIT_VALID( gl_bitsUserConnected, BIT_PLAYER( %0 ) ) )
 
-#define IsUserHasTyrantMace(%1) Get_Bit(gl_iBitUserHasTyrantMace, %1)
+#define IsUserHasTyrantMace(%1) (Get_Bit(gl_iBitUserHasTyrantMace, %1))
 
 #define Get_Bit(%1,%2) ((%1 & (1 << (%2 & 31))) ? 1 : 0)
 #define Set_Bit(%1,%2) %1 |= (1 << (%2 & 31))
@@ -559,11 +559,11 @@ public EV_RoundStart( )
 /* ~ [ HamSandwich ] ~ */
 public Ham_CWeapon_Deploy_Post( const pItem )
 {
-	new pPlayer
-	if ( is_nullent( pItem ) || !IsUserHasTyrantMace(pPlayer) )
+	if ( is_nullent( pItem ) )
 		return;
 
-	if ( ( pPlayer = get_member( pItem, m_pPlayer ) ) <= 0 )
+	new pPlayer
+	if ( ( pPlayer = get_member( pItem, m_pPlayer ) ) <= 0 || zp_get_user_zombie(pPlayer) || !IsUserHasTyrantMace(pPlayer))
 		return;
 
 	// Charge after deploy
@@ -823,7 +823,7 @@ public Ham_CWeapon_PrimaryAttack_Pre( const pItem )
 {
 	static pPlayer; pPlayer = get_member( pItem, m_pPlayer )
 
-	if ( is_nullent( pItem ) || !IsUserHasTyrantMace(pPlayer) )
+	if ( is_nullent( pItem ) || zp_get_user_zombie(pPlayer) || !IsUserHasTyrantMace(pPlayer) )
 		return HAM_IGNORED;
 
 	if ( pPlayer <= 0 )
@@ -856,7 +856,7 @@ public Ham_CWeapon_SecondaryAttack_Pre( const pItem )
 {
 	static pPlayer; pPlayer = get_member( pItem, m_pPlayer );
 
-	if ( is_nullent( pItem ) || !IsUserHasTyrantMace(pPlayer) )
+	if ( is_nullent( pItem ) || zp_get_user_zombie(pPlayer) || !IsUserHasTyrantMace(pPlayer) )
 		return HAM_IGNORED;
 
 	if ( pPlayer <= 0 )
