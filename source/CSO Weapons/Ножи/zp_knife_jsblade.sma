@@ -15,13 +15,13 @@ new const g_szKnifeRef[] = "katanad";
 //Settings Fake TraceLines
 #define ATTACK_STEP 10.0 // Шаг TraceAttack
 
-#define ATTACK_PRIMARY_DIST 	34.0 
+#define ATTACK_PRIMARY_DIST 	64.0
 #define ATTACK_PRIMARY_DAMAGE 	313.5
 #define ATTACK_PRIMARY_WIDTH 	30.0
 #define ATTACK_PRIMARY_HEIGHT 	10.0
 #define ATTACK_PRIMARY_KNOC		120.0
 
-#define ATTACK_SECONDARY_DIST 	63.0 
+#define ATTACK_SECONDARY_DIST 	64.0
 #define ATTACK_SECONDARY_DAMAGE 	718.5
 #define ATTACK_SECONDARY_WIDTH 	60.0
 #define ATTACK_SECONDARY_HEIGHT 	20.0
