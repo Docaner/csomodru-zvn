@@ -201,7 +201,7 @@ custom_explode(iEnt)
 	for(new iEnemy = 1; iEnemy <= MaxClients; iEnemy++)
 	{
 		if(!is_user_alive(iEnemy) || !zp_get_user_zombie(iEnemy) || 
-			zp_get_user_nemesis(iEnemy) || zp_get_user_first_zombie(iEnemy) || Float:get_entvar(iEnemy, var_takedamage) == DAMAGE_NO)
+			zp_get_user_nemesis(iEnemy) || Float:get_entvar(iEnemy, var_takedamage) == DAMAGE_NO)
 			continue;
 
 		get_entvar(iEnemy, var_origin, vecEnemy);
