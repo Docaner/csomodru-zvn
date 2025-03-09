@@ -160,7 +160,7 @@ public ClCmd_CheckBlock(id)
 			client_print_color(id, id, "^4[CHAT] ^1Общение через чат доступно с ^3%d ^1уровня", ACCESS_LVL_CHAT)
 			flLastCheck[id] = flGameTime + DELAY_MESSAGE;
 		}
-		return PLUGIN_HANDLED_MAIN;
+		return PLUGIN_HANDLED;
 	}
 
 	if(g_aUserInfo[id][BLOCKTYPE] & BLOCK_CHAT)
@@ -181,7 +181,7 @@ public ClCmd_CheckBlock(id)
 			flLastCheck[id] = flGameTime + DELAY_MESSAGE;
 		} 
 		
-		return PLUGIN_HANDLED_MAIN;
+		return PLUGIN_HANDLED;
 	}
 
 	return PLUGIN_CONTINUE;

@@ -32,5 +32,5 @@ public plugin_end()
         return PLUGIN_CONTINUE;
 
     client_print_color(id, id, "^4[Error] ^1Возникла ошибка! Попробуйте отправить сообщение позднее...");
-    return PLUGIN_HANDLED_MAIN;
+    return PLUGIN_HANDLED;
 }
