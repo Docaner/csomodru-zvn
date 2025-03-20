@@ -115,7 +115,7 @@ enum _: eAttackType
 
 // Slash
 #define JANUS9_SLASH_DAMAGE 200.0
-#define JANUS9_SLASH_DISTANCE 64.0
+#define JANUS9_SLASH_DISTANCE 72.0
 
 new Float: flAngles_Slash[] = { 0.0, 2.5, -2.5, 5.0, -5.0, 7.5, -7.5 };
 new Float: flAnglesUp_Slash[] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
