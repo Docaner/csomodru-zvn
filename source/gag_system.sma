@@ -4,10 +4,10 @@
 #include <zpe_lvl>
 #include <zpe_mysql_main>
 
-new const g_szHost[] = "46.174.50.7";
-new const g_szUser[] = "u35796_zombiecso";
-new const g_szPass[] = "D9d6G1u7Y4";
-new const g_szDB[] = "u35796_zombiecso";
+new const g_szHost[] = "46.174.52.223";
+new const g_szUser[] = "u4_ker6nfzBKV";
+new const g_szPass[] = "!=hE9fDz3DbbfgDkNZ4wVBK+";
+new const g_szDB[] = "s4_gamecms";
 
 #define FLAG_ACCESS ADMIN_BAN // Админ-флаг для доступа к меню
 #define FLAG_IMMUNITY ADMIN_IMMUNITY // Иммунитет к блокировке от админа

@@ -1,0 +1,26 @@
+{
+  "amxxpawn.compiler.includePaths": [
+    "${workspaceRoot}\\bin\\include"
+  ],
+  "amxxpawn.compiler.executablePath": "${workspaceRoot}\\bin\\amxxpc.exe",
+
+  "amxxpawn.compiler.outputType": "path",
+  "amxxpawn.compiler.outputPath": "${workspaceRoot}\\compiled",
+
+  "editor.formatOnSave": true,
+
+  // "emeraldwalk.runonsave": {
+  //   "commands": [
+  //     {
+  //       "match": ".*\\.sma$",
+  //       "cmd": "${workspaceFolder}/bin/linter/uncrustify.exe -c ${workspaceFolder}/bin/linter/amxmodx.cfg --no-backup ${file}",
+  //       "showOutput": "always"
+  //     },
+  //     {
+  //       "match": ".*\\.inc$",
+  //       "cmd": "${workspaceFolder}/bin/linter/uncrustify.exe -c ${workspaceFolder}/bin/linter/amxmodx.cfg --no-backup ${file}",
+  //       "showOutput": "always"
+  //     }
+  //   ]
+  // }
+}
