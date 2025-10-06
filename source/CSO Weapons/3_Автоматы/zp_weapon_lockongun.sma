@@ -1129,10 +1129,10 @@ stock UTIL_PrecacheSoundsFromModel(const szModelPath[])
 				
 				fread_blocks(iFile, szSoundPath, 64, BLOCK_CHAR);
 				
-				if(strlen(szSoundPath))
+				if (strlen(szSoundPath))
 				{
-					strtolower(szSoundPath);
-					engfunc(EngFunc_PrecacheSound, szSoundPath);
+					format(szSoundPath, charsmax(szSoundPath), "sound/%s", szSoundPath);
+					engfunc(EngFunc_PrecacheGeneric, szSoundPath);
 				}
 			}
 		}

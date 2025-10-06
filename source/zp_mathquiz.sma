@@ -135,7 +135,7 @@ public ShowQuestion(id)
 
 public plugin_precache()
 {
-    precache_sound(SoundQuiz)
+    precache_generic(SoundQuiz)
 }
 
 stock StartTimer()
