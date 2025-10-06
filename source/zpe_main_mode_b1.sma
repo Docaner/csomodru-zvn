@@ -538,11 +538,11 @@ Float:g_cached_leapsurvivorcooldown, Float:g_cached_buytime
 
 new START_ROUND_SOUND[5][] =
 {
-	"zp_br_cso/countdown/round_start_1.wav",
-	"zp_br_cso/countdown/round_start_2.wav",
-	"zp_br_cso/countdown/round_start_3.wav",
-	"zp_br_cso/countdown/round_start_4.wav",
-	"zp_br_cso/countdown/round_start_5.wav"
+	"sound/zp_br_cso/countdown/round_start_1.wav",
+	"sound/zp_br_cso/countdown/round_start_2.wav",
+	"sound/zp_br_cso/countdown/round_start_3.wav",
+	"sound/zp_br_cso/countdown/round_start_4.wav",
+	"sound/zp_br_cso/countdown/round_start_5.wav"
 };
 
 new g_countdown
@@ -1086,25 +1086,25 @@ public plugin_precache()
 	g_fwPrecacheSound = register_forward(FM_PrecacheSound, "fw_PrecacheSound")
 	
 	// CUSTOM FOR CSO MODE 
-	precache_sound("zp_br_cso/countdown/10.wav")
-	precache_sound("zp_br_cso/countdown/9.wav")
-	precache_sound("zp_br_cso/countdown/8.wav")
-	precache_sound("zp_br_cso/countdown/7.wav")
-	precache_sound("zp_br_cso/countdown/6.wav")
-	precache_sound("zp_br_cso/countdown/5.wav")
-	precache_sound("zp_br_cso/countdown/4.wav")
-	precache_sound("zp_br_cso/countdown/3.wav")
-	precache_sound("zp_br_cso/countdown/2.wav")
-	precache_sound("zp_br_cso/countdown/1.wav")
+	precache_generic("sound/zp_br_cso/countdown/10.wav")
+	precache_generic("sound/zp_br_cso/countdown/9.wav")
+	precache_generic("sound/zp_br_cso/countdown/8.wav")
+	precache_generic("sound/zp_br_cso/countdown/7.wav")
+	precache_generic("sound/zp_br_cso/countdown/6.wav")
+	precache_generic("sound/zp_br_cso/countdown/5.wav")
+	precache_generic("sound/zp_br_cso/countdown/4.wav")
+	precache_generic("sound/zp_br_cso/countdown/3.wav")
+	precache_generic("sound/zp_br_cso/countdown/2.wav")
+	precache_generic("sound/zp_br_cso/countdown/1.wav")
 	
-	precache_sound("zp_br_cso/countdown/countdown_battle_1.wav")
-	precache_sound("zp_br_cso/countdown/countdown_battle_2.wav")
+	precache_generic("sound/zp_br_cso/countdown/countdown_battle_1.wav")
+	precache_generic("sound/zp_br_cso/countdown/countdown_battle_2.wav")
 	
-	engfunc(EngFunc_PrecacheSound, START_ROUND_SOUND[0]);
-	engfunc(EngFunc_PrecacheSound, START_ROUND_SOUND[1]);
-	engfunc(EngFunc_PrecacheSound, START_ROUND_SOUND[2]);
-	engfunc(EngFunc_PrecacheSound, START_ROUND_SOUND[3]);
-	engfunc(EngFunc_PrecacheSound, START_ROUND_SOUND[4]);
+	engfunc(EngFunc_PrecacheGeneric, START_ROUND_SOUND[0]);
+	engfunc(EngFunc_PrecacheGeneric, START_ROUND_SOUND[1]);
+	engfunc(EngFunc_PrecacheGeneric, START_ROUND_SOUND[2]);
+	engfunc(EngFunc_PrecacheGeneric, START_ROUND_SOUND[3]);
+	engfunc(EngFunc_PrecacheGeneric, START_ROUND_SOUND[4]);
 	
 	engfunc(EngFunc_PrecacheModel, gModelV1)
 	engfunc(EngFunc_PrecacheModel, gModelV2)
@@ -9891,12 +9891,12 @@ public countdown()
 			case 0:
 			{
 				client_print(0, print_center, "%L", LANG_PLAYER, "COUNTDOWN_BATTLE_READY")
-				PlaySound("zp_br_cso/countdown/countdown_battle_2.wav");
+				PlaySound("sound/zp_br_cso/countdown/countdown_battle_2.wav");
 			}
 			case 1:
 			{
 				client_print(0, print_center, "%L", LANG_PLAYER, "COUNTDOWN_BATTLE_READY_2")
-				PlaySound("zp_br_cso/countdown/countdown_battle_1.wav");
+				PlaySound("sound/zp_br_cso/countdown/countdown_battle_1.wav");
 			}
 		}
 	}
@@ -9904,7 +9904,7 @@ public countdown()
 	{
 		client_print(0, print_center, "%L", LANG_PLAYER, "COUNTDOWN_SECONDS", g_countdown)
 		
-		format(szSound, 31, "zp_br_cso/countdown/%d.wav", g_countdown)
+		format(szSound, 31, "sound/zp_br_cso/countdown/%d.wav", g_countdown)
 		PlaySound(szSound)
 	}
 	
@@ -10206,7 +10206,7 @@ RemoveFrags(attacker, victim)
 PlaySound(const sound[])
 {
 	if (equal(sound[strlen(sound)-4], ".mp3"))
-		client_cmd(0, "mp3 play ^"sound/%s^"", sound)
+		client_cmd(0, "mp3 play ^"%s^"", sound)
 	else
 		client_cmd(0, "spk ^"%s^"", sound)
 }

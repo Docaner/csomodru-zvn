@@ -514,11 +514,17 @@ load_maps()
 	{
 		if(!iLen || szBuffer[0] == ';')
 			continue
-		
+
+		trim(szBuffer);
+
+		if(szBuffer[0] == '^0')
+			continue;
+
 		szMinOnline = "";
 		szMaxOnline = "";
 		szKnockMul = "";
 		szKnockMulDuck = "";
+		szMap = "";
 
 		parse(szBuffer, szMap, charsmax(szMap), szMinOnline, charsmax(szMinOnline), szMaxOnline, charsmax(szMaxOnline), szKnockMul, charsmax(szKnockMul), szKnockMulDuck, charsmax(szKnockMulDuck));
 
@@ -526,13 +532,13 @@ load_maps()
 
 		if(!file_exists(szBuffer))
 		{
-			log_amx("Карта ^"%s^" не была найдена", szMap);
+			log_amx("Карта ^"%s^" не была найдена [%d]", szMap, iLine);
 			continue;
 		}
 
-		if(ArrayFindString(g_asMap, szMap) != -1)
+		if(AFindString(g_asMap, szMap) != -1)
 		{
-			log_amx("Карта ^"%s^" прописана в ini несколько раз", szMap);
+			log_amx("Карта ^"%s^" прописана в ini несколько раз [%d]", szMap, iLine);
 			continue;
 		}
 
@@ -618,7 +624,7 @@ load_lastmaps()
 
 		json_object_get_string(j, szKey, szMap, charsmax(szMap));
 
-		a = ArrayFindString(g_asMap, szMap);
+		a = AFindString(g_asMap, szMap);
 
 		if(a != -1)
 			g_aLastMaps[g_iLastlen++] = a;
@@ -703,4 +709,17 @@ stock SCREEN_FADE(id, iDuration, iHoldtime, iFadeType, iRed, iGreen, iBlue, iAlp
 	write_byte(iAlpha) // alpha
 	message_end()
 
+}
+
+stock AFindString(Array:a, const str[]) {
+	new iterStr[64];
+
+	for(new i = 0; i < ArraySize(a); i++) {
+		ArrayGetString(a, i, iterStr, charsmax(iterStr));
+
+		if(strcmp(str, iterStr) == 0)
+			return i;
+	}
+
+	return -1;
 }
