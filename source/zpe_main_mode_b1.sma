@@ -1486,7 +1486,7 @@ public plugin_init()
 	g_MsgSync3 = CreateHudSyncObj()
 	
 	// Format mod name
-	formatex(g_modname, charsmax(g_modname), "VIP БЕСПЛАТНО")
+	formatex(g_modname, charsmax(g_modname), "AGENT БЕСПЛАТНО")
 	
 	// Get Max Players
 	g_maxplayers = get_maxplayers()
