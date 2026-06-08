@@ -18,13 +18,13 @@
 /* ~ [ Macroses ] ~ */
 #define EJECT_BRASS						// Comment this line if u dont need eject brass (shell)
 #define CUSTOM_WEAPONLIST 				// Comment this line if u dont need weapon list
-#define CUSTOM_MUZZLEFLASH				// Comment this line if u dont need custom muzzle flash
-#define WALLPUFF_SMOKE					// Comment this line if u dont need wallpuff smoke
+//#define CUSTOM_MUZZLEFLASH				// Comment this line if u dont need custom muzzle flash
+//#define WALLPUFF_SMOKE					// Comment this line if u dont need wallpuff smoke
 #define DYNAMIC_CROSSHAIR 				// Comment this line if u dont need dynamic crosshair (With it not work's plugin Unlimited Clip)
 
 #define LOWER_LIMIT_OF_ENTITIES			100
 
-#define IsCustomWeapon(%0) 				(get_entvar(%0, var_impulse) == gl_iAllocString_WeaponUID)
+#define IsCustomWeapon(%0) 				(get_entvar(%0, var_impulse) == WEAPON_KEY)
 #define GetItemClip(%0) 				get_member(%0, m_Weapon_iClip)
 #define PrecacheArray(%0,%1)			for(new i; i < sizeof %1; i++) engfunc(EngFunc_Precache%0, %1[i])
 
@@ -74,8 +74,8 @@ const WEAPON_SHOT_PENETRATION = 		2;
 const Bullet: WEAPON_BULLET_TYPE = 		BULLET_PLAYER_556MM;
 const Float: WEAPON_SHOT_DISTANCE = 	8192.0;
 const Float: WEAPON_RATE = 				0.0955;
-const Float: WEAPON_RATE_EX = 			0.14;
-const Float: WEAPON_DAMAGE = 			50.0;
+const Float: WEAPON_RATE_EX = 			0.20;
+const Float: WEAPON_DAMAGE = 			38.0;
 const Float: WEAPON_ACCURACY = 			0.35;
 const Float: WEAPON_RANGE_MODIFER = 	0.98;
 
@@ -96,13 +96,15 @@ enum _: eAnimList
 #define WEAPON_ANIM_SHOOT_TIME 			26/30.0
 
 /* ~ [ Params ] ~ */
+#define WEAPON_KEY 928538
+
 new gl_iItemID;
 #if defined CUSTOM_MUZZLEFLASH || defined WALLPUFF_SMOKE
 	new gl_iMaxEntities;
 #endif
 new Array: gl_aDecals;
 new gl_FmHook_DecalIndex;
-new gl_iAllocString_WeaponUID;
+/* new gl_iAllocString_WeaponUID; */
 #if defined EJECT_BRASS
 	new gl_iszModelIndex_Shell;
 #endif
@@ -162,11 +164,11 @@ public plugin_init()
 	#if defined CUSTOM_MUZZLEFLASH || defined WALLPUFF_SMOKE
 		gl_iMaxEntities = global_get(glb_maxEntities);
 	#endif
-	#if defined CUSTOM_WEAPONLIST
+	/* #if defined CUSTOM_WEAPONLIST
 		gl_iAllocString_WeaponUID = engfunc(EngFunc_AllocString, WEAPON_WEAPONLIST);
 	#else
 		gl_iAllocString_WeaponUID = engfunc(EngFunc_AllocString, WEAPON_NATIVE);
-	#endif
+	#endif */
 }
 
 public plugin_precache()
@@ -214,7 +216,7 @@ public plugin_natives() register_native(WEAPON_NATIVE, "Command_GiveWeapon", 1);
 
 public Command_GiveWeapon(const pPlayer)
 {
-	new pItem = rg_give_custom_item(pPlayer, WEAPON_REFERENCE, GT_DROP_AND_REPLACE, gl_iAllocString_WeaponUID);
+	new pItem = rg_give_custom_item(pPlayer, WEAPON_REFERENCE, GT_DROP_AND_REPLACE, WEAPON_KEY);
 	if(is_nullent(pItem)) return NULLENT;
 
 	return pItem;
@@ -316,7 +318,7 @@ public CWeapon_Holster_Post(const pItem)
 	public CWeapon_AddToPlayer_Post(const pItem, const pPlayer)
 	{
 		new iWeaponUID = get_entvar(pItem, var_impulse);
-		if(iWeaponUID != 0 && iWeaponUID != gl_iAllocString_WeaponUID) return;
+		if(iWeaponUID != 0 && iWeaponUID != WEAPON_KEY) return;
 
 		UTIL_WeaponList(pPlayer, pItem);
 	}

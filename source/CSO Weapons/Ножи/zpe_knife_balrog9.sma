@@ -41,7 +41,6 @@ enum
 #define ANIM_DRAW_TIME			40/30.0
 #define ANIM_CHARGE_START_TIME	22/30.0
 #define ANIM_CHARGE_FINISH_TIME	10/30.0
-// #define ANIM_CHARGE_IDLE_TIME	30/30.0 * 0.78
 #define ANIM_CHARGE_IDLE_TIME	30/30.0
 #define ANIM_CHARGE_ATTACK_TIME	49/30.0
 
@@ -73,6 +72,9 @@ new const g_szKnifeRef[] = "dragontail";
 //Delay primary attack
 #define KNIFE_ATTACK_DELAY 0.322
 
+//Delay charge attack
+#define CHARGE_DELAY 2.0
+
 //Attack's Counter 
 #define var_knife_primary_anim var_iuser1
 
@@ -87,10 +89,10 @@ new const g_szKnifeRef[] = "dragontail";
 #define CHARGE_DISTANCE 100.0
 
 //Charge Attack Damage
-#define CHARGE_DMG 550.0
+#define CHARGE_DMG 577.5 // 550.0
 
 //Charge Knock
-#define CHARGE_KNOCK 572.5
+#define CHARGE_KNOCK 600.0 // 572.5
 
 //Settings Fake TraceLines
 #define ATTACK_STEP 5.0 // Шаг TraceAttack
@@ -290,7 +292,7 @@ public HM_Knife_SecondaryAttack_Pre(iItem)
 		}
 		case CHARGE_START:
 		{
-			UTIL_AnimBlockAttack(id, iItem, ANIM_CHARGE_IDLE_NOT_FINISH, ANIM_CHARGE_IDLE_TIME);
+			UTIL_AnimBlockAttack(id, iItem, ANIM_CHARGE_IDLE_NOT_FINISH, CHARGE_DELAY, ANIM_CHARGE_IDLE_TIME);
 
 			set_member(iItem, m_Weapon_iWeaponState, CHARGE_LOAD);
 		}

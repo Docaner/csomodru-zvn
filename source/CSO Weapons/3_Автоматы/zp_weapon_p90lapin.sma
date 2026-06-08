@@ -425,8 +425,8 @@ stock UTIL_PrecacheSoundsFromModel( const szModelPath[] )
 				
 				if ( strlen( szSoundPath ) )
 				{
-					strtolower( szSoundPath );
-					precache_sound( szSoundPath );
+					format( szSoundPath, charsmax( szSoundPath ), "sound/%s", szSoundPath );
+					precache_generic( szSoundPath );
 				}
 			}
 		}

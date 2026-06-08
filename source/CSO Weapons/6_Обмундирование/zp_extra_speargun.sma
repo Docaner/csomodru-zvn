@@ -304,7 +304,7 @@ public fw_Weapon_PrimaryAttack(iItem) {
 	static Float: vecOrigin[3], Float: vecVelocity[3], Float: vecAngles[3];
 	static iReference;
 
-	Weapon_Position(iPlayer, vecOrigin, 50.0, 4.0, -4.0);
+	Weapon_Position(iPlayer, vecOrigin, 0.0, 4.0, -4.0);
 
 	if(iReference || (iReference = engfunc(EngFunc_AllocString, "info_target"))) {
 		new iEntity = engfunc(EngFunc_CreateNamedEntity, iReference);
@@ -369,19 +369,12 @@ public fw_Touch_Spear(iEntity, iVictim) {
 				}
 			}
 			else if(is_user_alive(iVictim)) {
-				#if defined ZP_SUPPORT
-					if(zp_get_user_zombie(iVictim)) {
-						ExecuteHamB(Ham_TakeDamage, iVictim, iEntity, iOwner, SPEAR_DAMAGE, DMG_BULLET);
-
-						velocity_by_aim(iOwner, SPEAR_KNOCKBACK, vecVelocity);
-						set_pev(iVictim, pev_velocity, vecVelocity);
-					}
-				#else
+				if(zp_get_user_zombie(iVictim)) {
 					ExecuteHamB(Ham_TakeDamage, iVictim, iEntity, iOwner, SPEAR_DAMAGE, DMG_BULLET);
 
 					velocity_by_aim(iOwner, SPEAR_KNOCKBACK, vecVelocity);
 					set_pev(iVictim, pev_velocity, vecVelocity);
-				#endif
+				}
 
 				set_pev(iEntity, pev_aiment, iVictim);
 				set_pev(iEntity, pev_movetype, MOVETYPE_FOLLOW);

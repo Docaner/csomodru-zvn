@@ -26,10 +26,10 @@ new const FLAME_MODEL[] = "sprites/zp_br_cso/zombie/flameplayer2.spr"
 
 /**
  * Стартовый кадр первого пламени
- * Note: Стартовый кадр второго пламени высчитывается g_iFlameMaxFrames - FLAME_FIRST_START_FRAME
+ * Note: Стартовый кадр второго пламени высчитывается FLAME_MAXFRAMES - FLAME_FIRST_START_FRAME
  */
-#define FLAME_FIRST_START_THINK random_float(float(1 * g_iFlameMaxFrames / 6), float(1 * g_iFlameMaxFrames / 4)) * FLAME_THINK
-#define FLAME_SECOND_START_THINK random_float(float(2 * g_iFlameMaxFrames / 3), float(5 * g_iFlameMaxFrames / 6)) * FLAME_THINK
+#define FLAME_FIRST_START_THINK random_float(float(1 * FLAME_MAXFRAMES / 6), float(1 * FLAME_MAXFRAMES / 4)) * FLAME_THINK
+#define FLAME_SECOND_START_THINK random_float(float(2 * FLAME_MAXFRAMES / 3), float(5 * FLAME_MAXFRAMES / 6)) * FLAME_THINK
 
 /**
  * Частота обновления кадров пламени
@@ -99,7 +99,8 @@ new g_iModelIndex_Flame, g_iModelIndex_Smoke;
 /**
  * Максимальное количество кадров спрайтов
  */
-new g_iFlameMaxFrames, g_iSmokeMaxFrames;
+#define FLAME_MAXFRAMES 37
+#define SMOKE_MAXFRAMES 30
 
 /**
  * Переменные обозначающие горение игрока
@@ -128,9 +129,6 @@ public plugin_precache()
 
 	g_iModelIndex_Flame = precache_model(FLAME_MODEL);
 	g_iModelIndex_Smoke = precache_model(SMOKE_MODEL);
-
-	g_iFlameMaxFrames = engfunc(EngFunc_ModelFrames, g_iModelIndex_Flame);
-	g_iSmokeMaxFrames = engfunc(EngFunc_ModelFrames, g_iModelIndex_Smoke);
 }
 
 public plugin_init()
@@ -391,7 +389,7 @@ stock Generate_NextThinks_Child(const pEntsChild[], Float:flThinks[], const iSiz
 	if(0 < iNulls < iSize)
 	{
 		new iNotNull = (iLastNull + 1) % iSize;
-		flThinks[iLastNull] = float(( get_entvar(iNotNull, var_frame) + g_iFlameMaxFrames / 2 ) % g_iFlameMaxFrames) * FLAME_THINK; 
+		flThinks[iLastNull] = float(( get_entvar(iNotNull, var_frame) + FLAME_MAXFRAMES / 2 ) % FLAME_MAXFRAMES) * FLAME_THINK; 
 	}
 	else if(iNulls == iSize)
 	{
@@ -434,11 +432,11 @@ stock Create_FlameChild(const pEntBase, const iIndexChace, const Float:flThink)
 	
 	if(iModelIndex == g_iModelIndex_Flame)
 	{
-		if(flFrame >= g_iFlameMaxFrames)
+		if(flFrame >= FLAME_MAXFRAMES)
 			Reset__SmokeChild(pEnt);
 		else 
 		{
-			UTIL_SetRendering(pEnt, .iRender = kRenderTransAdd, .flAmount = (255.0 / float(g_iFlameMaxFrames) * flFrame) );
+			UTIL_SetRendering(pEnt, .iRender = kRenderTransAdd, .flAmount = (255.0 / float(FLAME_MAXFRAMES) * flFrame) );
 			set_entvar(pEnt, var_frame, flFrame);
 		}
 
@@ -446,7 +444,7 @@ stock Create_FlameChild(const pEntBase, const iIndexChace, const Float:flThink)
 	}
 	else if(iModelIndex == g_iModelIndex_Smoke)
 	{
-		if(flFrame >= g_iSmokeMaxFrames)
+		if(flFrame >= SMOKE_MAXFRAMES)
 		{
 			new pPlayer = get_entvar(pEnt, var_owner);
 

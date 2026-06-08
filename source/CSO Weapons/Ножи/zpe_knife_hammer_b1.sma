@@ -96,9 +96,9 @@ new const Float:g_vecAddAngles[][] =
 #define HAMMER_DISTANCE_JUMP_STAB	110.0
 
 #define HAMMER_DAMAGE_SLASH		550.0
-#define HAMMER_DAMAGE_STAB		700.0
+#define HAMMER_DAMAGE_STAB		850.0
 
-#define HAMMER_KNOCKBACK_SLASH	545.0
+#define HAMMER_KNOCKBACK_SLASH	275.0
 
 #define HAMMER_NAME 		"Hammer"
 

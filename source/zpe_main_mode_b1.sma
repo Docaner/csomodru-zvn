@@ -538,11 +538,11 @@ Float:g_cached_leapsurvivorcooldown, Float:g_cached_buytime
 
 new START_ROUND_SOUND[5][] =
 {
-	"zp_br_cso/countdown/round_start_1.wav",
-	"zp_br_cso/countdown/round_start_2.wav",
-	"zp_br_cso/countdown/round_start_3.wav",
-	"zp_br_cso/countdown/round_start_4.wav",
-	"zp_br_cso/countdown/round_start_5.wav"
+	"sound/zp_br_cso/countdown/round_start_1.wav",
+	"sound/zp_br_cso/countdown/round_start_2.wav",
+	"sound/zp_br_cso/countdown/round_start_3.wav",
+	"sound/zp_br_cso/countdown/round_start_4.wav",
+	"sound/zp_br_cso/countdown/round_start_5.wav"
 };
 
 new g_countdown
@@ -1086,25 +1086,25 @@ public plugin_precache()
 	g_fwPrecacheSound = register_forward(FM_PrecacheSound, "fw_PrecacheSound")
 	
 	// CUSTOM FOR CSO MODE 
-	precache_sound("zp_br_cso/countdown/10.wav")
-	precache_sound("zp_br_cso/countdown/9.wav")
-	precache_sound("zp_br_cso/countdown/8.wav")
-	precache_sound("zp_br_cso/countdown/7.wav")
-	precache_sound("zp_br_cso/countdown/6.wav")
-	precache_sound("zp_br_cso/countdown/5.wav")
-	precache_sound("zp_br_cso/countdown/4.wav")
-	precache_sound("zp_br_cso/countdown/3.wav")
-	precache_sound("zp_br_cso/countdown/2.wav")
-	precache_sound("zp_br_cso/countdown/1.wav")
+	precache_generic("sound/zp_br_cso/countdown/10.wav")
+	precache_generic("sound/zp_br_cso/countdown/9.wav")
+	precache_generic("sound/zp_br_cso/countdown/8.wav")
+	precache_generic("sound/zp_br_cso/countdown/7.wav")
+	precache_generic("sound/zp_br_cso/countdown/6.wav")
+	precache_generic("sound/zp_br_cso/countdown/5.wav")
+	precache_generic("sound/zp_br_cso/countdown/4.wav")
+	precache_generic("sound/zp_br_cso/countdown/3.wav")
+	precache_generic("sound/zp_br_cso/countdown/2.wav")
+	precache_generic("sound/zp_br_cso/countdown/1.wav")
 	
-	precache_sound("zp_br_cso/countdown/countdown_battle_1.wav")
-	precache_sound("zp_br_cso/countdown/countdown_battle_2.wav")
+	precache_generic("sound/zp_br_cso/countdown/countdown_battle_1.wav")
+	precache_generic("sound/zp_br_cso/countdown/countdown_battle_2.wav")
 	
-	engfunc(EngFunc_PrecacheSound, START_ROUND_SOUND[0]);
-	engfunc(EngFunc_PrecacheSound, START_ROUND_SOUND[1]);
-	engfunc(EngFunc_PrecacheSound, START_ROUND_SOUND[2]);
-	engfunc(EngFunc_PrecacheSound, START_ROUND_SOUND[3]);
-	engfunc(EngFunc_PrecacheSound, START_ROUND_SOUND[4]);
+	engfunc(EngFunc_PrecacheGeneric, START_ROUND_SOUND[0]);
+	engfunc(EngFunc_PrecacheGeneric, START_ROUND_SOUND[1]);
+	engfunc(EngFunc_PrecacheGeneric, START_ROUND_SOUND[2]);
+	engfunc(EngFunc_PrecacheGeneric, START_ROUND_SOUND[3]);
+	engfunc(EngFunc_PrecacheGeneric, START_ROUND_SOUND[4]);
 	
 	engfunc(EngFunc_PrecacheModel, gModelV1)
 	engfunc(EngFunc_PrecacheModel, gModelV2)
@@ -1486,7 +1486,7 @@ public plugin_init()
 	g_MsgSync3 = CreateHudSyncObj()
 	
 	// Format mod name
-	formatex(g_modname, charsmax(g_modname), "VIP БЕСПЛАТНО")
+	formatex(g_modname, charsmax(g_modname), "AGENT БЕСПЛАТНО")
 	
 	// Get Max Players
 	g_maxplayers = get_maxplayers()
@@ -1871,12 +1871,18 @@ public fw_PlayerSpawn_Post(id)
 	if (g_respawn_as_zombie[id] && !g_newround)
 	{
 		reset_vars(id, 0) // reset player vars
-		zombieme(id, 0, 0, 0, 0) // make him zombie right away
+		zombieme(id, 0, g_plagueround, 0, 0) // make him zombie right away
 		
 		return;
 	}
+	if(g_plagueround) 
+	{
+		reset_vars(id, 0);
+		humanme(id, 0, 1, 0);
 
-	
+		return;
+	}
+
 	// Reset player vars
 	reset_vars(id, 0)
 	g_buytime[id] = get_gametime()
@@ -2017,6 +2023,12 @@ public fw_PlayerKilled_Post(victim, attacker, shouldgib)
 	static selfkill
 	selfkill = (victim == attacker || !is_user_valid_connected(attacker)) ? true : false
 	
+	if(g_plagueround) 
+	{
+		g_respawn_as_zombie[victim] = g_zombie[victim];
+		set_task(get_pcvar_float(cvar_spawndelay), "respawn_player_task", victim+TASK_SPAWN)
+	}
+
 	// Respawn if deathmatch is enabled
 	if (get_pcvar_num(cvar_deathmatch))
 	{
@@ -2031,6 +2043,7 @@ public fw_PlayerKilled_Post(victim, attacker, shouldgib)
 		// Set the respawn task
 		set_task(get_pcvar_float(cvar_spawndelay), "respawn_player_task", victim+TASK_SPAWN)
 	}
+
 }
 
 // Ham Take Damage Forward
@@ -5450,92 +5463,10 @@ make_a_zombie(mode, id)
 		// Plague Mode
 		g_plagueround = true
 		g_lastmode = MODE_PLAGUE
-		
-		// Turn specified amount of players into Survivors
-		/*static iSurvivors, iMaxSurvivors
-		iMaxSurvivors = get_pcvar_num(cvar_plaguesurvnum)
-		iSurvivors = 0
-		
-		while (iSurvivors < iMaxSurvivors)
-		{
-			// Choose random guy
-			id = fnGetRandomAlive(random_num(1, iPlayersnum))
-			
-			// Already a survivor?
-			if (g_survivor[id])
-				continue;
-			
-			// If not, turn him into one
-			humanme(id, 0, 1, 0)
-			iSurvivors++
-			
-			// Apply survivor health multiplier
-			fm_set_user_health(id, floatround(float(pev(id, pev_health)) * get_pcvar_float(cvar_plaguesurvhpmulti)))
-		}
-		
-		// Turn specified amount of players into Nemesis
-		static iNemesis, iMaxNemesis
-		iMaxNemesis = get_pcvar_num(cvar_plaguenemnum)
-		iNemesis = 0
-		
-		while (iNemesis < iMaxNemesis)
-		{
-			// Choose random guy
-			id = fnGetRandomAlive(random_num(1, iPlayersnum))
-			
-			// Already a survivor or nemesis?
-			if (g_survivor[id] || g_nemesis[id])
-				continue;
-			
-			// If not, turn him into one
-			zombieme(id, 0, 1, 0, 0)
-			iNemesis++
-			
-			// Apply nemesis health multiplier
-			fm_set_user_health(id, floatround(float(pev(id, pev_health)) * get_pcvar_float(cvar_plaguenemhpmulti)))
-		}
-		
-		// iMaxZombies is rounded up, in case there aren't enough players
-		iMaxZombies = floatround((iPlayersnum-(get_pcvar_num(cvar_plaguenemnum)+get_pcvar_num(cvar_plaguesurvnum)))*get_pcvar_float(cvar_plagueratio), floatround_ceil)
-		iZombies = 0
-		
-		// Randomly turn iMaxZombies players into zombies
-		while (iZombies < iMaxZombies)
-		{
-			// Keep looping through all players
-			if (++id > g_maxplayers) id = 1
-			
-			// Dead or already a zombie or survivor
-			if (!g_isalive[id] || g_zombie[id] || g_survivor[id])
-				continue;
-			
-			// Random chance
-			if (random_num(0, 1))
-			{
-				// Turn into a zombie
-				zombieme(id, 0, 0, 1, 0)
-				iZombies++
-			}
-		}
-		
-		// Turn the remaining players into humans
-		for (id = 1; id <= g_maxplayers; id++)
-		{
-			// Only those of them who arent zombies or survivor
-			if (!g_isalive[id] || g_zombie[id] || g_survivor[id])
-				continue;
-			
-			// Switch to CT
-			zp_set_user_team(id, TEAM_CT)
-		}*/
-
 
 		//Инфекция чумы по проценту
 		//Получаем массив игроков, которые будут зомби
-		new iPlayersRandom[32], iNums = get_random_alive_players_by_ratio(TEAM_CT, get_pcvar_float(cvar_plagueratio), iPlayersRandom, TypeRandom:e_RandomPriority);
-		
-		//Из них выбираем немезид
-		new iPlayersNem[32], iNems = get_random_from_array(iPlayersRandom, iNums, get_pcvar_num(cvar_plaguenemnum), iPlayersNem);
+		new iPlayersNem[32], iNems = get_random_alive_players_by_ratio(TEAM_CT, get_pcvar_float(cvar_plagueratio), iPlayersNem, TypeRandom:e_RandomPriority);
 
 		//Инфекция немезид
 		for(new i; i < iNems; i++)
@@ -5544,16 +5475,12 @@ make_a_zombie(mode, id)
 			fm_set_user_health(iPlayersNem[i], floatround(float(pev(iPlayersNem[i], pev_health)) * get_pcvar_float(cvar_plaguenemhpmulti)))
 		}
 
-		//Инфекция остальных зомби
-		for(new i; i < iNums; i++) zombieme(iPlayersRandom[i], 0, 0, 1, 0, 1)
-
 		//Делаем нужное количество выживших
-		iNums = get_random_alive_players_by_num(TEAM_CT, get_pcvar_num(cvar_plaguesurvnum), iPlayersRandom);
-
-		for(new i; i < iNums; i++)
+		new iPlayersSurv[32], iSurvs = get_alive_players_by_team(TEAM_CT, iPlayersSurv, sizeof iPlayersSurv)
+		for(new i; i < iSurvs; i++)
 		{
-			humanme(iPlayersRandom[i], 0, 1, 0)
-			fm_set_user_health(iPlayersRandom[i], floatround(float(pev(iPlayersRandom[i], pev_health)) * get_pcvar_float(cvar_plaguesurvhpmulti)))
+			humanme(iPlayersSurv[i], 0, 1, 0)
+			fm_set_user_health(iPlayersSurv[i], floatround(float(pev(iPlayersSurv[i], pev_health)) * get_pcvar_float(cvar_plaguesurvhpmulti)))
 		}
 		
 		// Play plague sound
@@ -9964,12 +9891,12 @@ public countdown()
 			case 0:
 			{
 				client_print(0, print_center, "%L", LANG_PLAYER, "COUNTDOWN_BATTLE_READY")
-				PlaySound("zp_br_cso/countdown/countdown_battle_2.wav");
+				PlaySound("sound/zp_br_cso/countdown/countdown_battle_2.wav");
 			}
 			case 1:
 			{
 				client_print(0, print_center, "%L", LANG_PLAYER, "COUNTDOWN_BATTLE_READY_2")
-				PlaySound("zp_br_cso/countdown/countdown_battle_1.wav");
+				PlaySound("sound/zp_br_cso/countdown/countdown_battle_1.wav");
 			}
 		}
 	}
@@ -9977,7 +9904,7 @@ public countdown()
 	{
 		client_print(0, print_center, "%L", LANG_PLAYER, "COUNTDOWN_SECONDS", g_countdown)
 		
-		format(szSound, 31, "zp_br_cso/countdown/%d.wav", g_countdown)
+		format(szSound, 31, "sound/zp_br_cso/countdown/%d.wav", g_countdown)
 		PlaySound(szSound)
 	}
 	
@@ -10279,7 +10206,7 @@ RemoveFrags(attacker, victim)
 PlaySound(const sound[])
 {
 	if (equal(sound[strlen(sound)-4], ".mp3"))
-		client_cmd(0, "mp3 play ^"sound/%s^"", sound)
+		client_cmd(0, "mp3 play ^"%s^"", sound)
 	else
 		client_cmd(0, "spk ^"%s^"", sound)
 }
@@ -11056,7 +10983,7 @@ stock get_random_alive_players_by_ratio(TeamName:iFromTeam, Float:flRatio, iOut[
 
 stock get_alive_players_by_team(TeamName:iFromTeam, iPlayers[], iLen)
 {
-	new iCount, iMin = min(g_maxplayers, iLen - 1);
+	new iCount, iMin = min(g_maxplayers, iLen);
 
 	for(new iPlayer = 1; iPlayer <= iMin; iPlayer++)
 	{

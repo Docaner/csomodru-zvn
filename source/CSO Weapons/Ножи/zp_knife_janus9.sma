@@ -2,6 +2,8 @@
 #include <fakemeta>
 #include <hamsandwich>
 #include <zombieplague>
+#include <smart_effects>
+#include <zp_system>
 
 #define IsCustomItem(%1) (get_pdata_int(%1, m_iId, linux_diff_weapon) == CSW_KNIFE)
 #define IsUserHasJanus9(%1) Get_Bit(gl_iBitUserHasJanus9, %1)
@@ -56,6 +58,7 @@
 #define m_flNextAttack 83
 
 // CBasePlayer
+#define m_flPainShock 108
 #define m_iPlayerTeam 114
 #define m_flLastAttackTime 220
 #define m_pActiveItem 373
@@ -100,7 +103,7 @@ enum _: eAttackType
 
 #define JANUS9_WEAPON_REFERENCE "weapon_knife"
 #define JANUS9_ANIM_EXTENSION "knife" // CSO: tomahawk
-#define JANUS9_ANIM_EXTENSION_B "knife" // CSO: skullaxe
+#define JANUS9_ANIM_EXTENSION_B "skullaxe" // CSO: skullaxe
 
 #define JANUS9_MODEL_VIEW "models/x/v_janus9.mdl"
 #define JANUS9_MODEL_PLAYER_A "models/x/p_janus9_a.mdl"
@@ -112,14 +115,17 @@ enum _: eAttackType
 
 // Slash
 #define JANUS9_SLASH_DAMAGE 200.0
-#define JANUS9_SLASH_DISTANCE 100.0
+#define JANUS9_SLASH_DISTANCE 72.0
 
 new Float: flAngles_Slash[] = { 0.0, 2.5, -2.5, 5.0, -5.0, 7.5, -7.5 };
 new Float: flAnglesUp_Slash[] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
 
 // Stab
-#define JANUS9_STAB_DAMAGE 1300.0
-#define JANUS9_STAB_DISTANCE 150.0
+#define JANUS9_STAB_DAMAGE 315.0
+#define JANUS9_STAB_DISTANCE 90.0
+
+#define JANUS9_KNOCKBACK_SLASH	120.0
+#define JANUS9_KNOCKBACK_STAB	800.0
 
 new Float: flAngles_Stab[] = { 0.0, -2.5, 2.5, -5.0, 5.0, -7.5, 7.5, -10.0, 10.0, -12.5, 12.5, -15.0, 15.0, -17.5, 17.5, -20.0, 2.0 };
 new Float: flAnglesUp_Stab[] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
@@ -136,12 +142,15 @@ new const JANUS9_SOUNDS[][] =
 	"weapons/janus9_endsignal.wav" // 7 - End signal
 };
 
+native zp_register_knife(const szName[]);
+forward zp_knife_selected(id, iKnife, iOldKnife);
+
 new gl_iBitUserHasJanus9,
 	
 	gl_iszModelIndexBloodSpray,
 	gl_iszModelIndexBloodDrop,
 
-	gl_iItemID;
+	g_iKnife;
 
 public plugin_init()
 {
@@ -158,8 +167,18 @@ public plugin_init()
 	RegisterHam(Ham_Weapon_WeaponIdle, 		JANUS9_WEAPON_REFERENCE, "CKnife__Idle_Pre", false);
 	RegisterHam(Ham_Weapon_PrimaryAttack, 	JANUS9_WEAPON_REFERENCE, "CKnife__PrimaryAttack_Pre", false);
 	RegisterHam(Ham_Weapon_SecondaryAttack,	JANUS9_WEAPON_REFERENCE, "CKnife__SecondaryAttack_Pre", false);
+	RegisterHam(Ham_Spawn, "player", "fw_Player_Spawn", true);
 
-	gl_iItemID = zp_register_extra_item("JANUS-IX \d(Melee)", 20, ZP_TEAM_HUMAN);
+	g_iKnife = zp_register_knife("Janus-9");
+}
+
+public zp_knife_selected(iPlayer, iNew, iOld)
+{
+	if(g_iKnife == iNew && iNew != iOld)
+		Set_Bit(gl_iBitUserHasJanus9, iPlayer);
+
+	if(g_iKnife == iOld && iNew != iOld)
+		Reset_Bit(gl_iBitUserHasJanus9, iPlayer);
 }
 
 public plugin_precache()
@@ -181,45 +200,20 @@ public plugin_precache()
 public plugin_natives()
 {
 	register_native("zp_user_has_janus9", "Command__GetJanus9", 1);
-	register_native("zp_give_user_janus9", "Command__GiveJanus9", 1);
-	register_native("zp_delete_user_janus9", "Command__DelJanus9", 1);
 }
 
 public Command__GetJanus9(iPlayer) return IsUserHasJanus9(iPlayer);
-public Command__GiveJanus9(iPlayer)
-{
-	Set_Bit(gl_iBitUserHasJanus9, iPlayer);
 
+public fw_Player_Spawn(iPlayer) 
+{
+	if(!IsUserHasJanus9(iPlayer) || zp_get_user_zombie(iPlayer) || !is_user_alive(iPlayer)) return HAM_IGNORED;
+	
 	new iItem = get_pdata_cbase(iPlayer, m_pActiveItem, linux_diff_player);
-	if(is_user_alive(iPlayer) && get_pdata_int(iItem, m_iId, linux_diff_weapon) == CSW_KNIFE)
-	{
-		if(pev_valid(iItem) == PDATA_SAFE)
-			ExecuteHamB(Ham_Item_Deploy, iItem);
-	}
-}
-public Command__DelJanus9(iPlayer) return Reset_Bit(gl_iBitUserHasJanus9, iPlayer);
-
-/* [ Zombie Plague ] */
-public zp_extra_item_selected(iPlayer, iItemID)
-{
-	if(iItemID != gl_iItemID) return PLUGIN_HANDLED;
-
-	if(IsUserHasJanus9(iPlayer))
-	{
-		client_print(iPlayer, print_center, "You have already [JANUS-IX]");
-		return ZP_PLUGIN_HANDLED;
-	}
-
-	Command__GiveJanus9(iPlayer);
-	return PLUGIN_HANDLED;
-}
-
-public zp_user_infected_post(iPlayer)
-{
-	if(!is_user_connected(iPlayer)) return;
-
-	if(IsUserHasJanus9(iPlayer))
-		Command__DelJanus9(iPlayer);
+	if(get_pdata_int(iItem, m_iId, linux_diff_weapon) != CSW_KNIFE) return HAM_IGNORED;
+	
+	setUserModel(iPlayer, iItem);
+	
+	return HAM_HANDLED;
 }
 
 /* [ Fakemeta ] */
@@ -297,7 +291,11 @@ public CKnife__Deploy_Post(iItem)
 {
 	new iPlayer = get_pdata_cbase(iItem, m_pPlayer, linux_diff_weapon);
 	if(!IsUserHasJanus9(iPlayer) || zp_get_user_zombie(iPlayer)) return;
+	setUserModel(iPlayer, iItem);
+}
 
+stock setUserModel(iPlayer, iItem)
+{
 	set_pev(iPlayer, pev_viewmodel2, JANUS9_MODEL_VIEW);
 	set_pev(iPlayer, pev_weaponmodel2, JANUS9_MODEL_PLAYER_A);
 
@@ -376,7 +374,7 @@ public CKnife__SecondaryAttack_Pre(iItem)
 	set_pdata_int(iItem, m_iHasJanusMode, 0, linux_diff_weapon);
 
 	UTIL_SendWeaponAnim(iPlayer, random_num(JANUS9_ANIM_STAB1, JANUS9_ANIM_STAB2));
-	set_pev(iPlayer, pev_weaponmodel2, JANUS9_MODEL_PLAYER_B);
+	set_pev(iPlayer, pev_weaponmodel2, JANUS9_MODEL_PLAYER_A); //JANUS9_MODEL_PLAYER_B
 
 	// Player animation
 	static szAnimation[64];
@@ -521,6 +519,10 @@ stock UTIL_FakeTraceAttack(iVictim, iAttacker, Float: flDamage, Float: vecDirect
 {
 	static Float: flTakeDamage; pev(iVictim, pev_takedamage, flTakeDamage);
 
+	if(zp_is_round_end() || pev(iVictim, pev_takedamage) == DAMAGE_NO ||
+		zp_get_user_zombie(iAttacker) || is_user_alive(iVictim) && !zp_get_user_zombie(iVictim) && !IsAliveNPC(iVictim)) 
+		return 0;
+
 	if(flTakeDamage == DAMAGE_NO) return 0; 
 	if(!(is_user_alive(iVictim))) return 0;
 
@@ -535,6 +537,9 @@ stock UTIL_FakeTraceAttack(iVictim, iAttacker, Float: flDamage, Float: vecDirect
 	static iBloodColor; iBloodColor = ExecuteHamB(Ham_BloodColor, iVictim);
 	
 	set_pdata_int(iVictim, m_LastHitGroup, iHitgroup, linux_diff_player);
+
+	if(!IsNPC(iVictim) && (flDamage == JANUS9_SLASH_DAMAGE)) FakeKnockBack(iVictim, vecDirection, JANUS9_KNOCKBACK_SLASH);
+	if(!IsNPC(iVictim) && (flDamage == JANUS9_STAB_DAMAGE)) FakeKnockBack(iVictim, vecDirection, JANUS9_KNOCKBACK_STAB);
 
 	switch(iHitgroup) 
 	{
@@ -556,6 +561,17 @@ stock UTIL_FakeTraceAttack(iVictim, iAttacker, Float: flDamage, Float: vecDirect
 	}
 
 	return 1;
+}
+
+stock FakeKnockBack(iPlayer, Float:vecDirection[3], Float:flKnockBack) 
+{
+	set_pdata_float(iPlayer, m_flPainShock, 1.0, 5);
+	static Float:vecVelocity[3]; pev(iPlayer, pev_velocity, vecVelocity);
+	if(pev(iPlayer, pev_flags) & FL_DUCKING) flKnockBack *= 0.45;
+	vecVelocity[0] = vecDirection[0] * flKnockBack;
+	vecVelocity[1] = vecDirection[1] * flKnockBack;
+	vecVelocity[2] = 0.0;
+	set_pev(iPlayer, pev_velocity, vecVelocity);
 }
 
 public UTIL_BloodDrips(Float:vecOrigin[3], iColor, iAmount)

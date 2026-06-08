@@ -12,10 +12,10 @@
 #define set_bit(%1,%2)		%1 |= (1 << (%2 & 31))
 #define reset_bit(%1,%2)	%1 &= ~(1 << (%2 & 31))
 
-#define SQL_HOST 			"46.174.49.142" 			// IP/Host бд
-#define SQL_USER 			"u1_apg48OAz8K" 			// Логин бд
-#define SQL_PASSWORD 		"I!hLh1.RIcwa.4VSFAZt@lcO" 			// Пароль бд
-#define SQL_DATABASE 		"s1_csomain" 			// База данных
+#define SQL_HOST 			"46.174.52.223" 			// IP/Host бд
+#define SQL_USER 			"u7_sF22ZPNdCS" 			// Логин бд
+#define SQL_PASSWORD 		"iBazVUvYhG46UE4JBt.dE@Pz" 			// Пароль бд
+#define SQL_DATABASE 		"s7_zvn" 			// База данных
 
 #define STARTMONEY 		20000
 #define STARTAMMO 		5

@@ -135,7 +135,7 @@ public ShowQuestion(id)
 
 public plugin_precache()
 {
-    precache_sound(SoundQuiz)
+    precache_generic(SoundQuiz)
 }
 
 stock StartTimer()
@@ -248,7 +248,7 @@ public RewardQuiz(id)
     new iReward
     get_user_name(id, WinnerNick, 127)
     
-    if (0 <= iNumRan <= 37)
+    if (0 <= iNumRan <= 35) /* 35 */
     {
         new Float: CurHealth
         new Float: GivenHealth = 100.0
@@ -279,7 +279,7 @@ public RewardQuiz(id)
             } 
         }
     }
-    if ((38 <= iNumRan <= 74)) 
+    if ((36 <= iNumRan <= 56)) /* 20 */
     {
         new Float: CurArmor
         new Float: CurHealth
@@ -311,7 +311,7 @@ public RewardQuiz(id)
             }
         }
     }
-    if ((75 <= iNumRan <= 85))
+    if ((57 <= iNumRan <= 72)) /* 15% */
     {
         if (zp_get_user_zombie(id))
         {
@@ -325,17 +325,17 @@ public RewardQuiz(id)
             iReward = 2 // тут для гранат людей
         } 
     }
-    if ((86 <= iNumRan <= 91)) 
+    if ((73 <= iNumRan <= 83)) /* 10% */
     {
         zp_set_user_ammo(id, zp_get_user_ammo(id) + random_num(5, 10))
         iReward = 3 // тут аммо
     }
-    if ((92 <= iNumRan <= 97)) 
+    if ((84 <= iNumRan <= 94)) /* 10% */
     {
         zp_set_user_money(id, zp_get_user_money(id) + random_num(5000, 10000))
         iReward = 4 // тут деньги
     }
-    if ( (98 <= iNumRan <= 100) ) 
+    if ( (95 <= iNumRan <= 100) ) /* 5% */
     {
         if (zp_get_user_zombie(id))
         {
