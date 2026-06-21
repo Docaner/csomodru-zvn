@@ -12,6 +12,7 @@
 ## Инструкция по установке
 ### 1. Установка схем БД
 Импортируйте код из файла db/scheme.sql в вашу БД. Обратите внимание, чтобы после импорта появились 4 таблички и 4 процедуры БД.
+
 <img width="250" height="139" alt="image" src="https://github.com/user-attachments/assets/7ed30577-cc06-47d4-b043-7f8a0495e689" />
 <img width="248" height="125" alt="image" src="https://github.com/user-attachments/assets/61ff1678-8b60-4199-98e6-c64d1b06944d" />
 
